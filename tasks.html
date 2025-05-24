@@ -70,9 +70,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="text-sm">進捗: {{ task.progress }}%</span>
-                  <span :class="getPriorityClass(task.priority)"
-                    >{{ task.priority }}</span
-                  >
+                  <span :class="getPriorityClass(task.priority)">緊急度: {{ task.priority }}</span>
                 </div>
               </div>
             </div>
