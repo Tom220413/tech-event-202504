@@ -44,12 +44,14 @@
         <div class="mb-8">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold">メンバー一覧</h2>
-            <button
-              @click="showNewMemberModal = true"
-              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-              メンバー追加
-            </button>
+            <div class="flex gap-2">
+              <button
+                @click="openNewMemberModal"
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                メンバー追加
+              </button>
+            </div>
           </div>
           <div class="grid gap-4">
             <div
@@ -61,10 +63,14 @@
                 <img
                   :src="member.icon"
                   :alt="member.name"
-                  class="w-12 h-12 rounded-full mr-4"
+                  class="w-12 h-12 rounded-full mr-4 cursor-pointer hover:opacity-70"
+                  @click="openEditMemberModal(member)"
                 />
                 <div class="flex-1 flex items-center">
-                  <h3 class="text-lg font-semibold">{{ member.name }}</h3>
+                  <h3 
+                    class="text-lg font-semibold cursor-pointer hover:text-gray-700"
+                    @click="openEditMemberModal(member)"
+                  >{{ member.name }}</h3>
                   <div
                     class="ml-2 relative"
                     @mouseenter="setHover(member.id, true)"
@@ -181,7 +187,7 @@
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
       >
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
-          <h3 class="text-xl font-bold mb-4">メンバー追加</h3>
+          <h3 class="text-xl font-bold mb-4">{{ isEditing ? 'メンバー編集' : 'メンバー追加' }}</h3>
           <div class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700"
@@ -215,10 +221,10 @@
                 キャンセル
               </button>
               <button
-                @click="addMember"
+                @click="isEditing ? updateMember() : addMember()"
                 class="px-4 py-2 bg-blue-500 text-white rounded"
               >
-                追加
+                {{ isEditing ? '更新' : '追加' }}
               </button>
             </div>
           </div>
@@ -360,9 +366,11 @@
           const showAllTasks = ref({});
           const hoveringStatus = ref({});
           const isHeaderVisible = ref(true);
+          const isEditing = ref(false);
           let lastScrollY = 0;
 
           const newMember = ref({
+            id: null,
             name: "",
             icon: "",
           });
@@ -495,6 +503,7 @@
             saveMembers(members.value);
             showNewMemberModal.value = false;
             newMember.value = {
+              id: null,
               name: "",
               icon: "",
             };
@@ -559,6 +568,39 @@
             }
           };
 
+          const openNewMemberModal = () => {
+            isEditing.value = false;
+            newMember.value = {
+              id: null,
+              name: "",
+              icon: "",
+            };
+            showNewMemberModal.value = true;
+          };
+
+          const openEditMemberModal = (member) => {
+            isEditing.value = true;
+            newMember.value = {
+              id: member.id,
+              name: member.name,
+              icon: member.icon,
+            };
+            showNewMemberModal.value = true;
+          };
+
+          const updateMember = () => {
+            const index = members.value.findIndex(m => m.id === newMember.value.id);
+            if (index !== -1) {
+              members.value[index] = {
+                ...members.value[index],
+                name: newMember.value.name,
+                icon: newMember.value.icon,
+              };
+              saveMembers(members.value);
+              showNewMemberModal.value = false;
+            }
+          };
+
           return {
             members,
             tasks,
@@ -579,6 +621,10 @@
             setHover,
             handleIconFileUpload,
             isHeaderVisible,
+            isEditing,
+            openNewMemberModal,
+            openEditMemberModal,
+            updateMember,
           };
         },
       }).mount("#app");
