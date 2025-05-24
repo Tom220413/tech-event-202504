@@ -1,31 +1,36 @@
-# tech-event-20250524
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## 🗓️ イベント概要
+## Getting Started
 
-- **開催日**: 2025年5月24日（土）
-- **場所**: レンタルスペース
-- **時間**: 9:00〜18:00（予定）
-- **人数**: 最低6名〜最大12名（3チームに分かれて開発予定）
+First, run the development server:
 
-## 🎯 イベント目的
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-> 生成AIを通して0からプロダクト開発を行い、実際の課題解決に挑戦する。
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## 🔧 当日の流れ（予定）
+You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
-| 時間帯 | 内容 |
-|--------|------|
-| 09:00〜9:10 | 開場・受付 |
-| 9:10〜9:30 | 自己紹介・チーム分け |
-| 9:30〜10:00 | 課題について説明など |
-| 10:00〜17:00 | プロダクト開発（お昼休憩含む） |
-| 17:00〜18:00 | 成果発表（localhost上で発表OK） |
-| 18:00〜 | 懇親会（自由参加、別場所で軽く打ち上げ的な？） |
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## 🧠 使用技術・ルール
+## Learn More
 
-- 使用言語・フレームワーク：自由
-- AI API（OpenAI, Claude, Gemini等）やGitHub Copilotの使用もOK
-- リポジトリ内に各チーム用のディレクトリを用意予定
-- チーム内でブランチを切ってもOK（例：`team-a/feature-xxx`）
+To learn more about Next.js, take a look at the following resources:
 
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
