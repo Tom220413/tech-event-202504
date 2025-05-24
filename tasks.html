@@ -24,12 +24,10 @@
         <nav class="flex space-x-4">
           <a
             href="http://127.0.0.1:3000/members.html"
-            class="text-blue-600 font-medium"
+            class="text-gray-600 font-medium hover:text-blue-600"
             >メンバー一覧</a
           >
-          <a
-            href="http://127.0.0.1:3000/tasks.html"
-            class="text-gray-600 hover:text-blue-600"
+          <a href="http://127.0.0.1:3000/tasks.html" class="text-blue-600"
             >タスク一覧</a
           >
         </nav>
@@ -76,7 +74,9 @@
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="text-sm">進捗: {{ task.progress }}%</span>
-                  <span :class="getPriorityClass(task.priority)">緊急度: {{ task.priority }}</span>
+                  <span :class="getPriorityClass(task.priority)"
+                    >緊急度: {{ task.priority }}</span
+                  >
                 </div>
               </div>
             </div>

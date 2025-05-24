@@ -388,16 +388,17 @@
 
           const handleScroll = () => {
             const currentScrollY = window.scrollY;
-            isHeaderVisible.value = currentScrollY < lastScrollY || currentScrollY < 10;
+            isHeaderVisible.value =
+              currentScrollY < lastScrollY || currentScrollY < 10;
             lastScrollY = currentScrollY;
           };
 
           onMounted(() => {
-            window.addEventListener('scroll', handleScroll);
+            window.addEventListener("scroll", handleScroll);
           });
 
           onUnmounted(() => {
-            window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener("scroll", handleScroll);
           });
 
           //====================

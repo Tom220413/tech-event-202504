@@ -18,14 +18,23 @@
     <div id="app">
       <!-- ヘッダー -->
       <header
-        class="fixed top-0 left-0 right-0 bg-white shadow-md h-[30px] z-50 flex items-center px-4"
+        :class="[
+          'fixed top-0 left-0 right-0 bg-white shadow-md py-4 z-50 flex items-center px-6 transition-transform duration-300',
+          isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
+        ]"
       >
-        <h1 class="text-lg font-bold mr-8">リモートワークス</h1>
+        <h1 class="text-2xl font-bold mr-8">RemoteWorks</h1>
         <nav class="flex space-x-4">
-          <a href="members.html" class="text-gray-600 hover:text-blue-600"
+          <a
+            href="http://127.0.0.1:3000/members.html"
+            class="text-gray-600 hover:text-blue-600"
             >メンバー一覧</a
           >
-          <a href="tasks.html" class="text-blue-600 font-medium">タスク一覧</a>
+          <a
+            href="http://127.0.0.1:3000/tasks.html"
+            class="text-gray-600 hover:text-blue-600"
+            >タスク一覧</a
+          >
         </nav>
       </header>
 
@@ -61,11 +70,15 @@
 
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700">タスク番号</label>
+              <label class="block text-sm font-medium text-gray-700"
+                >タスク番号</label
+              >
               <div class="mt-1 text-gray-900">{{ task.number }}</div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">タイトル</label>
+              <label class="block text-sm font-medium text-gray-700"
+                >タイトル</label
+              >
               <input
                 v-model="task.title"
                 type="text"
@@ -73,14 +86,18 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">内容</label>
+              <label class="block text-sm font-medium text-gray-700"
+                >内容</label
+              >
               <textarea
                 v-model="task.description"
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
               ></textarea>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">担当者</label>
+              <label class="block text-sm font-medium text-gray-700"
+                >担当者</label
+              >
               <select
                 v-model="task.assigneeId"
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
@@ -95,7 +112,9 @@
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">ステータス</label>
+              <label class="block text-sm font-medium text-gray-700"
+                >ステータス</label
+              >
               <select
                 v-model="task.status"
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
@@ -110,7 +129,9 @@
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">緊急度</label>
+              <label class="block text-sm font-medium text-gray-700"
+                >緊急度</label
+              >
               <select
                 v-model="task.priority"
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
@@ -121,7 +142,9 @@
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">進捗状況</label>
+              <label class="block text-sm font-medium text-gray-700"
+                >進捗状況</label
+              >
               <select
                 v-model="task.progress"
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
@@ -137,8 +160,17 @@
     </div>
 
     <script type="module">
-      import { createApp, ref, onMounted } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
-      import { loadMembers, saveMembers, loadTasks, saveTasks } from "./storage.js";
+      import {
+        createApp,
+        ref,
+        onMounted,
+      } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
+      import {
+        loadMembers,
+        saveMembers,
+        loadTasks,
+        saveTasks,
+      } from "./storage.js";
 
       createApp({
         setup() {
@@ -149,40 +181,40 @@
           onMounted(() => {
             // URLからタスクIDを取得
             const urlParams = new URLSearchParams(window.location.search);
-            const taskId = parseInt(urlParams.get('id'));
+            const taskId = parseInt(urlParams.get("id"));
 
             // データを読み込む
             members.value = loadMembers();
             const tasks = loadTasks();
-            
+
             // タスクを検索
-            const foundTask = tasks.find(t => t.id === taskId);
+            const foundTask = tasks.find((t) => t.id === taskId);
             if (foundTask) {
               task.value = { ...foundTask };
             } else {
               // タスクが見つからない場合はタスク一覧に戻る
-              window.location.href = 'tasks.html';
+              window.location.href = "tasks.html";
             }
           });
 
           const updateTask = () => {
             const tasks = loadTasks();
-            const index = tasks.findIndex(t => t.id === task.value.id);
+            const index = tasks.findIndex((t) => t.id === task.value.id);
             if (index !== -1) {
               tasks[index] = { ...task.value };
               saveTasks(tasks);
-              window.location.href = 'tasks.html';
+              window.location.href = "tasks.html";
             }
           };
 
           const deleteTask = () => {
-            if (confirm('このタスクを削除してもよろしいですか？')) {
+            if (confirm("このタスクを削除してもよろしいですか？")) {
               const tasks = loadTasks();
-              const index = tasks.findIndex(t => t.id === task.value.id);
+              const index = tasks.findIndex((t) => t.id === task.value.id);
               if (index !== -1) {
                 tasks.splice(index, 1);
                 saveTasks(tasks);
-                window.location.href = 'tasks.html';
+                window.location.href = "tasks.html";
               }
             }
           };
@@ -192,10 +224,10 @@
             members,
             taskStatuses,
             updateTask,
-            deleteTask
+            deleteTask,
           };
-        }
+        },
       }).mount("#app");
     </script>
   </body>
-</html> 
+</html>
