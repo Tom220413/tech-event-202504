@@ -154,116 +154,6 @@
           </div>
         </div>
       </div>
-
-      <div
-        v-if="selectedTask"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-      >
-        <div class="bg-white rounded-lg p-6 w-full max-w-md">
-          <h3 class="text-xl font-bold mb-4">タスク詳細</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700"
-                >タイトル</label
-              >
-              <input
-                v-model="selectedTask.title"
-                type="text"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700"
-                >内容</label
-              >
-              <textarea
-                v-model="selectedTask.description"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-              ></textarea>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700"
-                >担当者</label
-              >
-              <select
-                v-model="selectedTask.assigneeId"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-              >
-                <option
-                  v-for="member in members"
-                  :key="member.id"
-                  :value="member.id"
-                >
-                  {{ member.name }}
-                </option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700"
-                >ステータス</label
-              >
-              <select
-                v-model="selectedTask.status"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-              >
-                <option
-                  v-for="status in taskStatuses"
-                  :key="status"
-                  :value="status"
-                >
-                  {{ status }}
-                </option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700"
-                >緊急度</label
-              >
-              <select
-                v-model="selectedTask.priority"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-              >
-                <option value="高">高</option>
-                <option value="中">中</option>
-                <option value="低">低</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700"
-                >進捗状況</label
-              >
-              <select
-                v-model="selectedTask.progress"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-              >
-                <option v-for="n in 11" :key="n" :value="(n-1)*10">
-                  {{ (n-1)*10 }}%
-                </option>
-              </select>
-            </div>
-            <div class="flex justify-end gap-2">
-              <button
-                @click="deleteTask"
-                class="px-4 py-2 bg-red-500 text-white rounded"
-              >
-                削除
-              </button>
-              <button
-                @click="selectedTask = null"
-                class="px-4 py-2 border rounded"
-              >
-                閉じる
-              </button>
-              <button
-                @click="updateTask"
-                class="px-4 py-2 bg-blue-500 text-white rounded"
-              >
-                更新
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <script type="module">
@@ -282,7 +172,6 @@
       createApp({
         setup() {
           const showNewTaskModal = ref(false);
-          const selectedTask = ref(null);
 
           const newTask = ref({
             title: "",
@@ -417,58 +306,13 @@
           };
 
           const openTaskDetail = (task) => {
-            selectedTask.value = { ...task };
-          };
-
-          const updateTask = () => {
-            const index = tasks.value.findIndex(
-              (t) => t.id === selectedTask.value.id
-            );
-            if (index !== -1) {
-              tasks.value[index] = { ...selectedTask.value };
-              // Update member's tasks
-              members.value.forEach((member) => {
-                const taskIndex = member.tasks.findIndex(
-                  (t) => t.id === selectedTask.value.id
-                );
-                if (taskIndex !== -1) {
-                  member.tasks[taskIndex] = { ...selectedTask.value };
-                }
-              });
-            }
-            synchronizeMemberTasks();
-            saveTasks(tasks.value);
-            saveMembers(members.value);
-            selectedTask.value = null;
-          };
-
-          const deleteTask = () => {
-            const index = tasks.value.findIndex(
-              (t) => t.id === selectedTask.value.id
-            );
-            if (index !== -1) {
-              tasks.value.splice(index, 1);
-              // Remove from member's tasks
-              members.value.forEach((member) => {
-                const taskIndex = member.tasks.findIndex(
-                  (t) => t.id === selectedTask.value.id
-                );
-                if (taskIndex !== -1) {
-                  member.tasks.splice(taskIndex, 1);
-                }
-              });
-            }
-            synchronizeMemberTasks();
-            saveTasks(tasks.value);
-            saveMembers(members.value);
-            selectedTask.value = null;
+            window.location.href = `task-detail.html?id=${task.id}`;
           };
 
           return {
             members,
             tasks,
             showNewTaskModal,
-            selectedTask,
             newTask,
             taskStatuses,
             getStatusClass,
@@ -477,8 +321,6 @@
             getMemberName,
             addTask,
             openTaskDetail,
-            updateTask,
-            deleteTask,
           };
         },
       }).mount("#app");
