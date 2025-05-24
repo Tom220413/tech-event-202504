@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { issues } from '../register/route';
+import { issues } from '../../lib/data.js';
 
 // メモリ内のデータストアを/api/registerと共有
 let registeredIssues = [];
@@ -7,18 +7,10 @@ let registeredIssues = [];
 export async function POST(request) {
   try {
     const body = await request.json();
-
-    // リクエストのバリデーション
-    if (!body.content || !Array.isArray(body.content) || body.content.length === 0) {
-      return NextResponse.json({
-        success: false,
-        status: 400,
-        message: '無効なリクエスト形式です'
-      }, { status: 400 });
-    }
+    console.log(body, 'ああああ')
 
     // IDの存在チェック
-    const requestedId = body.content[0].id;
+    const requestedId = body.id;
     if (!requestedId) {
       return NextResponse.json({
         success: false,

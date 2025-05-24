@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 
 // タグの列挙型
@@ -19,189 +20,65 @@ const PRIORITY = {
   LOW: '低'
 };
 
-// モックデータ
-const mockIssues = [
-  {
-    id: 1,
-    create_date: '2024-03-20',
-    username: '田中太郎',
-    urgency: '高',
-    title: 'ログイン機能の不具合',
-    content: 'ユーザーがログインできない問題が発生しています。エラーメッセージは表示されません。',
-    tag: TAGS.DEVELOPMENT,
-    limit: '2024-03-25',
-    flg: false,
-  },
-  {
-    id: 2,
-    create_date: '2024-03-19',
-    username: '佐藤花子',
-    urgency: '中',
-    title: 'ドキュメントの更新',
-    content: 'API仕様書の更新が必要です。新機能の追加に伴う変更点を反映させてください。',
-    tag: TAGS.DOCUMENTATION,
-    limit: '2024-03-28',
-    flg: true,
-  },
-  {
-    id: 3,
-    create_date: '2024-03-18',
-    username: '鈴木一郎',
-    urgency: '高',
-    title: 'セキュリティ脆弱性の修正',
-    content: '認証処理に重大なセキュリティホールが発見されました。早急な対応が必要です。',
-    tag: TAGS.DEVELOPMENT,
-    limit: '2024-03-21',
-    flg: false,
-  },
-  {
-    id: 4,
-    create_date: '2024-03-17',
-    username: '高橋美咲',
-    urgency: '低',
-    title: 'UIデザインの改善',
-    content: 'ユーザーからのフィードバックに基づき、ダッシュボードのレイアウトを改善する必要があります。',
-    tag: TAGS.DESIGN,
-    limit: '2024-03-30',
-    flg: false,
-  },
-  {
-    id: 5,
-    create_date: '2024-03-16',
-    username: '伊藤健太',
-    urgency: '中',
-    title: 'パフォーマンス最適化',
-    content: 'データベースクエリの最適化が必要です。現在の応答時間が許容範囲を超えています。',
-    tag: TAGS.DEVELOPMENT,
-    limit: '2024-03-26',
-    flg: true,
-  },
-  {
-    id: 6,
-    create_date: '2024-03-15',
-    username: '渡辺真理',
-    urgency: '低',
-    title: 'ユーザーマニュアルの作成',
-    content: '新機能の追加に伴い、ユーザーマニュアルの更新が必要です。',
-    tag: TAGS.DOCUMENTATION,
-    limit: '2024-03-29',
-    flg: false,
-  },
-  {
-    id: 7,
-    create_date: '2024-03-14',
-    username: '山田太郎',
-    urgency: '高',
-    title: 'サーバー障害の対応',
-    content: '本番環境でサーバーの応答が不安定になっています。原因調査と復旧が必要です。',
-    tag: TAGS.INFRASTRUCTURE,
-    limit: '2024-03-20',
-    flg: true,
-  },
-  {
-    id: 8,
-    create_date: '2024-03-13',
-    username: '佐々木花子',
-    urgency: '中',
-    title: 'テスト環境の整備',
-    content: 'CIパイプラインの改善と自動テストの追加が必要です。',
-    tag: TAGS.DEVELOPMENT,
-    limit: '2024-03-27',
-    flg: false,
-  },
-  {
-    id: 9,
-    create_date: '2024-03-12',
-    username: '中村健一',
-    urgency: '高',
-    title: 'バックアップシステムの構築',
-    content: '現在のバックアップシステムが不十分です。新しいバックアップシステムの構築が必要です。',
-    tag: TAGS.INFRASTRUCTURE,
-    limit: '2024-03-22',
-    flg: false,
-  },
-  {
-    id: 10,
-    create_date: '2024-03-11',
-    username: '小林優子',
-    urgency: '中',
-    title: 'モバイルアプリのUI改善',
-    content: 'iOSとAndroidの両方でUIの一貫性を保つための改善が必要です。',
-    tag: TAGS.DESIGN,
-    limit: '2024-03-28',
-    flg: true,
-  },
-  {
-    id: 11,
-    create_date: '2024-03-10',
-    username: '加藤大輔',
-    urgency: '低',
-    title: '開発環境の整備',
-    content: '新しい開発者のための環境構築手順書の作成が必要です。',
-    tag: TAGS.DOCUMENTATION,
-    limit: '2024-03-31',
-    flg: false,
-  },
-  {
-    id: 12,
-    create_date: '2024-03-09',
-    username: '吉田和子',
-    urgency: '高',
-    title: 'データ移行作業',
-    content: '旧システムから新システムへのデータ移行作業の実施が必要です。',
-    tag: TAGS.DEVELOPMENT,
-    limit: '2024-03-23',
-    flg: false,
-  },
-  {
-    id: 13,
-    create_date: '2024-03-08',
-    username: '山本隆',
-    urgency: '中',
-    title: '監視システムの改善',
-    content: '現在の監視システムでは検知できない問題があるため、改善が必要です。',
-    tag: TAGS.INFRASTRUCTURE,
-    limit: '2024-03-29',
-    flg: true,
-  },
-  {
-    id: 14,
-    create_date: '2024-03-07',
-    username: '田中美咲',
-    urgency: '低',
-    title: 'デザインガイドラインの更新',
-    content: '新しいブランドカラーの適用に伴うデザインガイドラインの更新が必要です。',
-    tag: TAGS.DESIGN,
-    limit: '2024-03-30',
-    flg: false,
-  },
-  {
-    id: 15,
-    create_date: '2024-03-06',
-    username: '佐藤健太',
-    urgency: '高',
-    title: 'セキュリティ監査の実施',
-    content: '四半期ごとのセキュリティ監査を実施し、報告書の作成が必要です。',
-    tag: TAGS.OTHER,
-    limit: '2024-03-24',
-    flg: false,
-  }
-];
-
 export default function Home() {
+  const router = useRouter();
   const [filter, setFilter] = useState('all');
   const [selectedTag, setSelectedTag] = useState('all');
-  const [sortBy, setSortBy] = useState('createdAt');
-  const [issues, setIssues] = useState(mockIssues);
+  const [sortBy, setSortBy] = useState('newest');
+  const [issues, setIssues] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isCreateMode, setIsCreateMode] = useState(false);
+  const [isDetailMode, setIsDetailMode] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState(null);
+  const [editedIssue, setEditedIssue] = useState(null);
   const [newIssue, setNewIssue] = useState({
-    inputter_name: '',
+    inputter_name: '山田太郎',
     priority: PRIORITY.MEDIUM,
     title: '',
     content: '',
     tag: TAGS.DEVELOPMENT,
     limit: '',
   });
+  const [formErrors, setFormErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+
+  useEffect(() => {
+    const fetchIssues = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/list');
+        console.log(response, 'ああああ')
+        if (!response.ok) {
+          throw new Error('課題の取得に失敗しました');
+        }
+        const data = await response.json();
+        // APIからのレスポンスデータを適切な形式に変換
+        const formattedIssues = data.map(issue => ({
+          id: issue.id,
+          create_date: issue.registration_date,
+          username: issue.Inputter_name,
+          urgency: issue.priority,
+          title: issue.title,
+          content: issue.content,
+          tag: issue.tag,
+          limit: issue.limit,
+          flg: issue.isResolve || false
+        }));
+        setIssues(formattedIssues);
+      } catch (error) {
+        console.error('Failed to fetch issues:', error);
+        setSubmitError('課題の取得に失敗しました。もう一度お試しください。');
+        // エラー時はモックデータを使用
+        setIssues(mockIssues);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchIssues();
+  }, []);
 
   // 利用可能なタグの一覧を取得
   const availableTags = ['all', ...new Set(issues.map(issue => issue.tag))];
@@ -212,29 +89,181 @@ export default function Home() {
     return acc;
   }, {});
 
-  const handleCreateIssue = (e) => {
+  const validateForm = () => {
+    const errors = {};
+    if (!newIssue.title.trim()) errors.title = 'タイトルは必須です';
+    if (!newIssue.content.trim()) errors.content = '内容は必須です';
+    if (!newIssue.limit) errors.limit = '期限は必須です';
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleCreateIssue = async (e) => {
     e.preventDefault();
-    const issue = {
-      id: issues.length + 1,
-      create_date: new Date().toISOString().split('T')[0],
-      ...newIssue,
-      flg: false,
-    };
-    setIssues([issue, ...issues]);
-    setIsCreateMode(false);
-    setNewIssue({
-      inputter_name: '',
-      priority: PRIORITY.MEDIUM,
-      title: '',
-      content: '',
-      tag: TAGS.DEVELOPMENT,
-      limit: '',
-    });
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    setSubmitError(null);
+    
+    try {
+      const today = new Date();
+      const formattedDate = today.toISOString().split('T')[0];
+      
+      const issueData = {
+        Inputter_name: newIssue.inputter_name,
+        priority: newIssue.priority,
+        title: newIssue.title,
+        content: newIssue.content,
+        tag: newIssue.tag,
+        limit: newIssue.limit
+      };
+
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(issueData),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || '課題の作成に失敗しました');
+        }
+
+        const createdIssue = await response.json();
+        // APIからのレスポンスに基づいて新しい課題を作成
+        const newIssue = {
+          id: createdIssue.id,
+          create_date: formattedDate,
+          username: issueData.Inputter_name,
+          urgency: issueData.priority,
+          title: issueData.title,
+          content: issueData.content,
+          tag: issueData.tag,
+          limit: issueData.limit,
+          flg: false
+        };
+        setIssues([newIssue, ...issues]);
+      } catch (apiError) {
+        console.warn('API request failed, falling back to local state:', apiError);
+        // APIが利用できない場合のフォールバック処理
+        const localIssue = {
+          id: issues.length + 1,
+          create_date: formattedDate,
+          username: issueData.Inputter_name,
+          urgency: issueData.priority,
+          title: issueData.title,
+          content: issueData.content,
+          tag: issueData.tag,
+          limit: issueData.limit,
+          flg: false
+        };
+        setIssues([localIssue, ...issues]);
+      }
+
+      setIsCreateMode(false);
+      setNewIssue({
+        inputter_name: '山田太郎',
+        priority: PRIORITY.MEDIUM,
+        title: '',
+        content: '',
+        tag: TAGS.DEVELOPMENT,
+        limit: '',
+      });
+      setFormErrors({});
+    } catch (error) {
+      console.error('Failed to create issue:', error);
+      setSubmitError(error.message || '課題の作成に失敗しました。もう一度お試しください。');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewIssue(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // リアルタイムバリデーション
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const handleIssueClick = (issue) => {
+    router.push(`/issues/${issue.id}`);
+  };
+
+  const handleEditClick = () => {
+    setEditedIssue({ ...selectedIssue });
+    setIsEditMode(true);
+  };
+
+  const handleStatusToggle = async () => {
+    try {
+      const response = await fetch(`/api/update?id=${selectedIssue.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          isResolve: !selectedIssue.flg
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('状態の更新に失敗しました');
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message || '状態の更新に失敗しました');
+      }
+
+      // APIからのレスポンスデータを適切な形式に変換
+      const updatedIssue = {
+        id: result.data.id,
+        create_date: result.data.registration_date,
+        username: result.data.Inputter_name,
+        urgency: result.data.priority,
+        title: result.data.title,
+        content: result.data.content,
+        tag: result.data.tag,
+        limit: result.data.limit,
+        flg: result.data.isResolve
+      };
+
+      // ローカルの状態を更新
+      const updatedIssues = issues.map(issue => 
+        issue.id === selectedIssue.id ? updatedIssue : issue
+      );
+      setIssues(updatedIssues);
+      setSelectedIssue(updatedIssue);
+    } catch (error) {
+      console.error('Failed to update issue status:', error);
+      setSubmitError('状態の更新に失敗しました。もう一度お試しください。');
+    }
+  };
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    const updatedIssues = issues.map(issue =>
+      issue.id === editedIssue.id ? editedIssue : issue
+    );
+    setIssues(updatedIssues);
+    setSelectedIssue(editedIssue);
+    setIsEditMode(false);
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditedIssue(prev => ({
       ...prev,
       [name]: value
     }));
@@ -251,8 +280,10 @@ export default function Home() {
 
     return statusMatch && tagMatch;
   }).sort((a, b) => {
-    if (sortBy === 'createdAt') {
+    if (sortBy === 'newest') {
       return new Date(b.create_date) - new Date(a.create_date);
+    } else if (sortBy === 'oldest') {
+      return new Date(a.create_date) - new Date(b.create_date);
     } else if (sortBy === 'priority') {
       const priorityOrder = { '高': 3, '中': 2, '低': 1 };
       return priorityOrder[b.urgency] - priorityOrder[a.urgency];
@@ -280,90 +311,103 @@ export default function Home() {
     }
   };
 
-  if (isCreateMode) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.createHeader}>
-          <h1 className={styles.title}>課題の新規作成</h1>
-          <button 
-            className={styles.backButton}
-            onClick={() => setIsCreateMode(false)}
-          >
-            一覧に戻る
-          </button>
-        </div>
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
-        <form onSubmit={handleCreateIssue} className={styles.createForm}>
-          <div className={styles.formGroup}>
-            <label htmlFor="title">タイトル</label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={newIssue.title}
-              onChange={handleInputChange}
-              required
-              maxLength={30}
-              className={styles.input}
-            />
+  if (isDetailMode && selectedIssue) {
+    if (isLoading) {
+      return (
+        <div className={styles.container}>
+          <div className={styles.createHeader}>
+            <h1 className={styles.title}>課題の詳細</h1>
           </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="content">内容</label>
-            <textarea
-              id="content"
-              name="content"
-              value={newIssue.content}
-              onChange={handleInputChange}
-              required
-              maxLength={225}
-              className={styles.textarea}
-            />
-          </div>
-
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="inputter_name">担当者</label>
-              <input
-                type="text"
-                id="inputter_name"
-                name="inputter_name"
-                value={newIssue.inputter_name}
-                onChange={handleInputChange}
-                required
-                maxLength={32}
-                className={styles.input}
-              />
+          <div className={styles.skeletonDetailCard}>
+            <div className={styles.skeletonDetailHeader}>
+              <div className={`${styles.skeleton} ${styles.skeletonStatus}`} />
+              <div className={`${styles.skeleton} ${styles.skeletonPriority}`} />
             </div>
+            <div className={`${styles.skeleton} ${styles.skeletonDetailTitle}`} />
+            <div className={`${styles.skeleton} ${styles.skeletonDetailContent}`} />
+            <div className={styles.skeletonDetailMeta}>
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className={`${styles.skeleton} ${styles.skeletonDetailMetaItem}`} />
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
 
+    if (isEditMode) {
+      return (
+        <div className={styles.container}>
+          <div className={styles.createHeader}>
+            <h1 className={styles.title}>課題の編集</h1>
+            <button 
+              className={styles.backButton}
+              onClick={() => setIsEditMode(false)}
+            >
+              キャンセル
+            </button>
+          </div>
+
+          <form onSubmit={handleEditSubmit} className={styles.createForm}>
             <div className={styles.formGroup}>
               <label htmlFor="priority">優先度</label>
               <select
                 id="priority"
-                name="priority"
-                value={newIssue.priority}
-                onChange={handleInputChange}
-                className={styles.select}
+                name="urgency"
+                value={editedIssue.urgency}
+                onChange={handleEditInputChange}
+                className={styles.formSelect}
               >
-                {Object.values(PRIORITY).map(priority => (
-                  <option key={priority} value={priority}>{priority}</option>
+                {Object.entries(PRIORITY).map(([key, value]) => (
+                  <option key={key} value={value}>{value}</option>
                 ))}
               </select>
             </div>
-          </div>
 
-          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="title">タイトル</label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                value={editedIssue.title}
+                onChange={handleEditInputChange}
+                className={styles.formInput}
+                required
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="content">内容</label>
+              <textarea
+                id="content"
+                name="content"
+                value={editedIssue.content}
+                onChange={handleEditInputChange}
+                className={styles.formTextarea}
+                rows="5"
+                required
+              />
+            </div>
+
             <div className={styles.formGroup}>
               <label htmlFor="tag">タグ</label>
               <select
                 id="tag"
                 name="tag"
-                value={newIssue.tag}
-                onChange={handleInputChange}
-                className={styles.select}
+                value={editedIssue.tag}
+                onChange={handleEditInputChange}
+                className={styles.formSelect}
               >
-                {Object.values(TAGS).map(tag => (
-                  <option key={tag} value={tag}>{tag}</option>
+                {Object.entries(TAGS).map(([key, value]) => (
+                  <option key={key} value={value}>{value}</option>
                 ))}
               </select>
             </div>
@@ -374,17 +418,206 @@ export default function Home() {
                 type="date"
                 id="limit"
                 name="limit"
-                value={newIssue.limit}
-                onChange={handleInputChange}
+                value={editedIssue.limit}
+                onChange={handleEditInputChange}
+                className={styles.formInput}
                 required
-                className={styles.input}
               />
+            </div>
+
+            <div className={styles.formActions}>
+              <button
+                type="submit"
+                className={styles.submitButton}
+              >
+                更新する
+              </button>
+            </div>
+          </form>
+        </div>
+      );
+    }
+
+    return (
+      <div className={styles.container}>
+        <div className={styles.createHeader}>
+          <h1 className={styles.title}>課題の詳細</h1>
+          <div className={styles.detailActions}>
+            <button 
+              className={styles.statusToggleButton}
+              onClick={handleStatusToggle}
+            >
+              {selectedIssue.flg ? '未解決に戻す' : '解決済みにする'}
+            </button>
+            <button 
+              className={styles.editButton}
+              onClick={handleEditClick}
+            >
+              編集
+            </button>
+            <button 
+              className={styles.backButton}
+              onClick={() => setIsDetailMode(false)}
+            >
+              一覧に戻る
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.detailCard}>
+          <div className={styles.detailHeader}>
+            <div className={styles.detailStatus}>
+              <span className={`${styles.priority} ${getPriorityClass(selectedIssue.urgency)}`}>
+                {selectedIssue.urgency}
+              </span>
+              <span className={`${styles.status} ${selectedIssue.flg ? styles.statusResolved : styles.statusUnresolved}`}>
+                {selectedIssue.flg ? '解決済み' : '未解決'}
+              </span>
+            </div>
+            <div className={styles.detailTag}>
+              <span className={styles.tag}>
+                <svg className={styles.tagIcon} viewBox="0 0 24 24" width="16" height="16">
+                  <path fill="currentColor" d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>
+                </svg>
+                {selectedIssue.tag}
+              </span>
             </div>
           </div>
 
+          <h2 className={styles.detailTitle}>{selectedIssue.title}</h2>
+          
+          <div className={styles.detailContent}>
+            <h3 className={styles.detailContentTitle}>内容</h3>
+            <p className={styles.detailContentText}>{selectedIssue.content}</p>
+          </div>
+
+          <div className={styles.detailMeta}>
+            <div className={styles.detailMetaItem}>
+              <span className={styles.detailMetaLabel}>担当者</span>
+              <span className={styles.detailMetaValue}>{selectedIssue.username}</span>
+            </div>
+            <div className={styles.detailMetaItem}>
+              <span className={styles.detailMetaLabel}>登録日</span>
+              <span className={styles.detailMetaValue}>{selectedIssue.create_date}</span>
+            </div>
+            <div className={styles.detailMetaItem}>
+              <span className={styles.detailMetaLabel}>期限</span>
+              <span className={styles.detailMetaValue}>{selectedIssue.limit}</span>
+            </div>
+            <div className={styles.detailMetaItem}>
+              <span className={styles.detailMetaLabel}>経過日数</span>
+              <span className={styles.detailMetaValue}>{calculateDaysPassed(selectedIssue.create_date)}日</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isCreateMode) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.createHeader}>
+          <h1 className={styles.title}>新規課題の作成</h1>
+          <button 
+            className={styles.backButton}
+            onClick={() => setIsCreateMode(false)}
+          >
+            一覧に戻る
+          </button>
+        </div>
+
+        <form onSubmit={handleCreateIssue} className={styles.createForm}>
+          {submitError && (
+            <div className={styles.errorMessage}>
+              {submitError}
+            </div>
+          )}
+          
+          <div className={styles.formGroup}>
+            <label htmlFor="priority">優先度</label>
+            <select
+              id="priority"
+              name="priority"
+              value={newIssue.priority}
+              onChange={handleInputChange}
+              className={styles.formSelect}
+            >
+              {Object.entries(PRIORITY).map(([key, value]) => (
+                <option key={key} value={value}>{value}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="title">タイトル</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={newIssue.title}
+              onChange={handleInputChange}
+              className={`${styles.formInput} ${formErrors.title ? styles.error : ''}`}
+              placeholder="タイトルを入力してください"
+            />
+            {formErrors.title && (
+              <span className={styles.errorMessage}>{formErrors.title}</span>
+            )}
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="content">内容</label>
+            <textarea
+              id="content"
+              name="content"
+              value={newIssue.content}
+              onChange={handleInputChange}
+              className={`${styles.formTextarea} ${formErrors.content ? styles.error : ''}`}
+              placeholder="内容を入力してください"
+              rows="5"
+            />
+            {formErrors.content && (
+              <span className={styles.errorMessage}>{formErrors.content}</span>
+            )}
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="tag">タグ</label>
+            <select
+              id="tag"
+              name="tag"
+              value={newIssue.tag}
+              onChange={handleInputChange}
+              className={styles.formSelect}
+            >
+              {Object.entries(TAGS).map(([key, value]) => (
+                <option key={key} value={value}>{value}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="limit">期限</label>
+            <input
+              type="date"
+              id="limit"
+              name="limit"
+              value={newIssue.limit}
+              onChange={handleInputChange}
+              className={`${styles.formInput} ${formErrors.limit ? styles.error : ''}`}
+            />
+            {formErrors.limit && (
+              <span className={styles.errorMessage}>{formErrors.limit}</span>
+            )}
+          </div>
+
           <div className={styles.formActions}>
-            <button type="submit" className={styles.submitButton}>
-              登録する
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? '作成中...' : '作成する'}
             </button>
           </div>
         </form>
@@ -404,27 +637,6 @@ export default function Home() {
         </button>
       </div>
       
-      <div className={styles.tabs}>
-        <button 
-          className={`${styles.tab} ${filter === 'all' ? styles.active : ''}`}
-          onClick={() => setFilter('all')}
-        >
-          すべて
-        </button>
-        <button 
-          className={`${styles.tab} ${filter === 'unresolved' ? styles.active : ''}`}
-          onClick={() => setFilter('unresolved')}
-        >
-          未解決
-        </button>
-        <button 
-          className={`${styles.tab} ${filter === 'resolved' ? styles.active : ''}`}
-          onClick={() => setFilter('resolved')}
-        >
-          解決済み
-        </button>
-      </div>
-
       <div className={styles.mainContent}>
         <div className={styles.sidebar}>
           <div className={styles.tagList}>
@@ -437,73 +649,153 @@ export default function Home() {
                 <span>すべて</span>
                 <span className={styles.tagCount}>{issues.length}</span>
               </div>
-              {availableTags
-                .filter(tag => tag !== 'all')
-                .sort((a, b) => tagCounts[b] - tagCounts[a])
-                .map(tag => (
-                  <div
-                    key={tag}
-                    className={`${styles.tagItem} ${selectedTag === tag ? styles.active : ''}`}
-                    onClick={() => setSelectedTag(tag)}
-                  >
-                    <span>{tag}</span>
-                    <span className={styles.tagCount}>{tagCounts[tag]}</span>
-                  </div>
-                ))}
+              {Object.values(TAGS).map((tag) => (
+                <div
+                  key={tag}
+                  className={`${styles.tagItem} ${selectedTag === tag ? styles.active : ''}`}
+                  onClick={() => setSelectedTag(tag)}
+                >
+                  <span>{tag}</span>
+                  <span className={styles.tagCount}>
+                    {issues.filter(issue => issue.tag === tag).length}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
         <div className={styles.content}>
+          <div className={styles.tabs}>
+            <button
+              className={`${styles.tab} ${filter === 'all' ? styles.active : ''}`}
+              onClick={() => setFilter('all')}
+            >
+              すべて
+            </button>
+            <button
+              className={`${styles.tab} ${filter === 'unresolved' ? styles.active : ''}`}
+              onClick={() => setFilter('unresolved')}
+            >
+              未解決
+            </button>
+            <button
+              className={`${styles.tab} ${filter === 'resolved' ? styles.active : ''}`}
+              onClick={() => setFilter('resolved')}
+            >
+              解決済み
+            </button>
+          </div>
+
           <div className={styles.sortFilters}>
             <span className={styles.sortLabel}>並び替え:</span>
             <button
-              className={`${styles.sortButton} ${sortBy === 'createdAt' ? styles.active : ''}`}
-              onClick={() => setSortBy('createdAt')}
+              className={`${styles.sortButton} ${sortBy === 'newest' ? styles.active : ''}`}
+              onClick={() => setSortBy('newest')}
             >
-              登録順
+              新着順
+            </button>
+            <button
+              className={`${styles.sortButton} ${sortBy === 'oldest' ? styles.active : ''}`}
+              onClick={() => setSortBy('oldest')}
+            >
+              古い順
             </button>
             <button
               className={`${styles.sortButton} ${sortBy === 'priority' ? styles.active : ''}`}
               onClick={() => setSortBy('priority')}
             >
-              優先順位順
+              優先度順
             </button>
           </div>
 
-          <div className={styles.issuesList}>
-            {filteredIssues.map(issue => (
-              <div key={issue.id} className={`${styles.issueCard} ${issue.flg ? styles.resolved : styles.unresolved}`}>
-                <div className={styles.issueHeader}>
-                  <span className={`${styles.priority} ${getPriorityClass(issue.urgency)}`}>{issue.urgency}</span>
-                  <span className={`${styles.status} ${issue.flg ? styles.statusResolved : styles.statusUnresolved}`}>
-                    {issue.flg ? '解決済み' : '未解決'}
-                  </span>
-                </div>
-                <h3 className={styles.issueTitle}>{issue.title}</h3>
-                <div className={styles.issueFooter}>
-                  <div className={styles.issueMeta}>
-                    <span>担当: {issue.username}</span>
-                    <span>期限: {issue.limit}</span>
-                    <span>経過日数: {calculateDaysPassed(issue.create_date)}日</span>
+          {isLoading ? (
+            <div className={styles.issuesList}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className={styles.skeletonCard}>
+                  <div className={styles.skeletonHeader}>
+                    <div className={`${styles.skeleton} ${styles.skeletonStatus}`} />
+                    <div className={`${styles.skeleton} ${styles.skeletonPriority}`} />
                   </div>
-                  <div className={styles.issueDates}>
-                    <span>登録日: {issue.create_date}</span>
+                  <div className={`${styles.skeleton} ${styles.skeletonTitle}`} />
+                  <div className={styles.skeletonMeta}>
+                    <div className={`${styles.skeleton} ${styles.skeletonMetaItem}`} />
+                    <div className={`${styles.skeleton} ${styles.skeletonMetaItem}`} />
+                  </div>
+                  <div className={styles.skeletonMeta}>
+                    <div className={`${styles.skeleton} ${styles.skeletonTag}`} />
                   </div>
                 </div>
-                <div className={styles.tags}>
-                  <span className={styles.tag}>
-                    <svg className={styles.tagIcon} viewBox="0 0 24 24" width="16" height="16">
-                      <path fill="currentColor" d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>
-                    </svg>
-                    {issue.tag}
-                  </span>
+              ))}
+            </div>
+          ) : filteredIssues.length === 0 ? (
+            <div className={styles.emptyState}>
+              <h2 className={styles.emptyStateTitle}>課題が見つかりません</h2>
+              <p className={styles.emptyStateText}>
+                {filter !== 'all' || selectedTag !== null
+                  ? '選択されたフィルターに一致する課題はありません。'
+                  : 'まだ課題が登録されていません。'}
+              </p>
+              <button
+                className={styles.createButton}
+                onClick={() => setIsCreateMode(true)}
+              >
+                新しい課題を作成
+              </button>
+            </div>
+          ) : (
+            <div className={styles.issuesList}>
+              {filteredIssues.map((issue) => (
+                <div
+                  key={issue.id}
+                  className={`${styles.issueCard} ${issue.flg ? styles.resolved : styles.unresolved}`}
+                  onClick={() => handleIssueClick(issue)}
+                >
+                  <div className={styles.issueHeader}>
+                    <div className={styles.issueStatus}>
+                      <span className={`${styles.status} ${issue.flg ? styles.statusResolved : styles.statusUnresolved}`}>
+                        {issue.flg ? '解決済み' : '未解決'}
+                      </span>
+                    </div>
+                    <div className={styles.issuePriority}>
+                      <span className={`${styles.priority} ${getPriorityClass(issue.urgency)}`}>
+                        {issue.urgency}
+                      </span>
+                    </div>
+                  </div>
+                  <h3 className={styles.issueTitle}>{issue.title}</h3>
+                  <div className={styles.issueFooter}>
+                    <div className={styles.issueMeta}>
+                      <span>担当: {issue.username}</span>
+                      <span>期限: {issue.limit}</span>
+                      <span>経過日数: {calculateDaysPassed(issue.create_date)}日</span>
+                    </div>
+                    <div className={styles.issueDates}>
+                      <span>登録日: {issue.create_date}</span>
+                    </div>
+                  </div>
+                  <div className={styles.tags}>
+                    <span className={styles.tag}>
+                      <svg className={styles.tagIcon} viewBox="0 0 24 24" width="16" height="16">
+                        <path fill="currentColor" d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>
+                      </svg>
+                      {issue.tag}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+      <button 
+        className={styles.topButton}
+        onClick={scrollToTop}
+        aria-label="ページトップへ戻る"
+      >
+        TOPへ
+      </button>
     </div>
   );
 }
