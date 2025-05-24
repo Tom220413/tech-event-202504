@@ -44,39 +44,36 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
-  useEffect(() => {
-    const fetchIssues = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch('/api/list');
-        console.log(response, 'ああああ')
-        if (!response.ok) {
-          throw new Error('課題の取得に失敗しました');
-        }
-        const data = await response.json();
-        // APIからのレスポンスデータを適切な形式に変換
-        const formattedIssues = data.map(issue => ({
-          id: issue.id,
-          create_date: issue.registration_date,
-          username: issue.Inputter_name,
-          urgency: issue.priority,
-          title: issue.title,
-          content: issue.content,
-          tag: issue.tag,
-          limit: issue.limit,
-          flg: issue.isResolve || false
-        }));
-        setIssues(formattedIssues);
-      } catch (error) {
-        console.error('Failed to fetch issues:', error);
-        setSubmitError('課題の取得に失敗しました。もう一度お試しください。');
-        // エラー時はモックデータを使用
-        setIssues(mockIssues);
-      } finally {
-        setIsLoading(false);
+  const fetchIssues = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/list');
+      if (!response.ok) {
+        throw new Error('課題の取得に失敗しました');
       }
-    };
+      const data = await response.json();
+      console.log(data, 'データ')
+      const formattedIssues = data.map(issue => ({
+        id: issue.id,
+        create_date: issue.registration_date,
+        username: issue.Inputter_name,
+        urgency: issue.priority,
+        title: issue.title,
+        content: issue.content,
+        tag: issue.tag,
+        limit: issue.limit,
+        flg: issue.isResolve || false
+      }));
+      setIssues(formattedIssues);
+    } catch (error) {
+      console.error('Failed to fetch issues:', error);
+      setSubmitError('課題の取得に失敗しました。もう一度お試しください。');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchIssues();
   }, []);
 
