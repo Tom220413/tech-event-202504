@@ -274,49 +274,15 @@
         ref,
         computed,
       } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
+      import {
+        loadMembers,
+        saveMembers,
+        loadTasks,
+        saveTasks,
+      } from "./storage.js";
 
       createApp({
         setup() {
-          const members = ref([
-            {
-              id: 1,
-              name: "山田太郎",
-              icon: "https://i.pravatar.cc/150?img=1",
-              status: "出社",
-              tasks: [],
-            },
-            {
-              id: 2,
-              name: "鈴木花子",
-              icon: "https://i.pravatar.cc/150?img=2",
-              status: "在宅",
-              tasks: [],
-            },
-          ]);
-
-          const tasks = ref([
-            {
-              id: 1,
-              number: "TSK-001",
-              title: "ログイン機能の実装",
-              description: "ユーザー認証システムの実装",
-              assigneeId: 1,
-              status: "進行中",
-              priority: "高",
-              progress: 50,
-            },
-            {
-              id: 2,
-              number: "TSK-002",
-              title: "UIデザインの改善",
-              description: "ダッシュボードのレイアウト改善",
-              assigneeId: 2,
-              status: "未着手",
-              priority: "中",
-              progress: 0,
-            },
-          ]);
-
           const showNewMemberModal = ref(false);
           const selectedTask = ref(null);
           const showAllTasks = ref({});
@@ -353,8 +319,72 @@
             showAllTasks.value[memberId] = !showAllTasks.value[memberId];
           };
 
+          //====================
+          // データの永続化設定
+          //====================
+          const defaultMembers = [
+            {
+              id: 1,
+              name: "山田太郎",
+              icon: "https://i.pravatar.cc/150?img=1",
+              status: "出社",
+            },
+            {
+              id: 2,
+              name: "鈴木花子",
+              icon: "https://i.pravatar.cc/150?img=2",
+              status: "在宅",
+            },
+          ];
+
+          const defaultTasks = [
+            {
+              id: 1,
+              number: "TSK-001",
+              title: "ログイン機能の実装",
+              description: "ユーザー認証システムの実装",
+              assigneeId: 1,
+              status: "進行中",
+              priority: "高",
+              progress: 50,
+            },
+            {
+              id: 2,
+              number: "TSK-002",
+              title: "UIデザインの改善",
+              description: "ダッシュボードのレイアウト改善",
+              assigneeId: 2,
+              status: "未着手",
+              priority: "中",
+              progress: 0,
+            },
+          ];
+
+          const members = ref(loadMembers());
+          if (members.value.length === 0) {
+            members.value = defaultMembers;
+            saveMembers(members.value);
+          }
+
+          const tasks = ref(loadTasks());
+          if (tasks.value.length === 0) {
+            tasks.value = defaultTasks;
+            saveTasks(tasks.value);
+          }
+
+          const synchronizeMemberTasks = () => {
+            members.value.forEach((member) => {
+              member.tasks = tasks.value.filter(
+                (t) => t.assigneeId === member.id
+              );
+            });
+          };
+          synchronizeMemberTasks();
+
           const addMember = () => {
-            const id = Math.max(...members.value.map((m) => m.id)) + 1;
+            const id = members.value.length
+              ? Math.max(...members.value.map((m) => m.id)) + 1
+              : 1;
             members.value.push({
               id,
               name: newMember.value.name,
@@ -362,6 +392,7 @@
               status: "出社",
               tasks: [],
             });
+            saveMembers(members.value);
             showNewMemberModal.value = false;
             newMember.value = {
               name: "",
@@ -391,6 +422,9 @@
                 }
               });
             }
+            synchronizeMemberTasks();
+            saveTasks(tasks.value);
+            saveMembers(members.value);
             selectedTask.value = null;
           };
 
@@ -410,6 +444,9 @@
                 }
               });
             }
+            synchronizeMemberTasks();
+            saveTasks(tasks.value);
+            saveMembers(members.value);
             selectedTask.value = null;
           };
 

@@ -277,27 +277,48 @@
         ref,
         computed,
       } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
+      import {
+        loadMembers,
+        saveMembers,
+        loadTasks,
+        saveTasks,
+      } from "./storage.js";
 
       createApp({
         setup() {
-          const members = ref([
+          const showNewTaskModal = ref(false);
+          const selectedTask = ref(null);
+
+          const newTask = ref({
+            title: "",
+            description: "",
+            assigneeId: null,
+            priority: "中",
+            status: "未着手",
+            progress: 0,
+          });
+
+          const taskStatuses = ["未着手", "進行中", "完了", "保留"];
+
+          //====================
+          // データの永続化設定
+          //====================
+          const defaultMembers = [
             {
               id: 1,
               name: "山田太郎",
               icon: "https://i.pravatar.cc/150?img=1",
               status: "出社",
-              tasks: [],
             },
             {
               id: 2,
               name: "鈴木花子",
               icon: "https://i.pravatar.cc/150?img=2",
               status: "在宅",
-              tasks: [],
             },
-          ]);
+          ];
 
-          const tasks = ref([
+          const defaultTasks = [
             {
               id: 1,
               number: "TSK-001",
@@ -318,21 +339,28 @@
               priority: "中",
               progress: 0,
             },
-          ]);
+          ];
 
-          const showNewTaskModal = ref(false);
-          const selectedTask = ref(null);
+          const members = ref(loadMembers());
+          if (members.value.length === 0) {
+            members.value = defaultMembers;
+            saveMembers(members.value);
+          }
 
-          const newTask = ref({
-            title: "",
-            description: "",
-            assigneeId: null,
-            priority: "中",
-            status: "未着手",
-            progress: 0,
-          });
+          const tasks = ref(loadTasks());
+          if (tasks.value.length === 0) {
+            tasks.value = defaultTasks;
+            saveTasks(tasks.value);
+          }
 
-          const taskStatuses = ["未着手", "進行中", "完了", "保留"];
+          const synchronizeMemberTasks = () => {
+            members.value.forEach((member) => {
+              member.tasks = tasks.value.filter(
+                (t) => t.assigneeId === member.id
+              );
+            });
+          };
+          synchronizeMemberTasks();
 
           const getStatusClass = (status) => {
             const classes = {
@@ -364,11 +392,10 @@
           };
 
           const addTask = () => {
-            const id = Math.max(...tasks.value.map((t) => t.id)) + 1;
-            const taskNumber = `TSK-${String(tasks.value.length + 1).padStart(
-              3,
-              "0"
-            )}`;
+            const id = tasks.value.length
+              ? Math.max(...tasks.value.map((t) => t.id)) + 1
+              : 1;
+            const taskNumber = `TSK-${String(id).padStart(3, "0")}`;
             const task = {
               id,
               number: taskNumber,
@@ -380,6 +407,9 @@
             if (member) {
               member.tasks.push(task);
             }
+            synchronizeMemberTasks();
+            saveTasks(tasks.value);
+            saveMembers(members.value);
             showNewTaskModal.value = false;
             newTask.value = {
               title: "",
@@ -411,6 +441,9 @@
                 }
               });
             }
+            synchronizeMemberTasks();
+            saveTasks(tasks.value);
+            saveMembers(members.value);
             selectedTask.value = null;
           };
 
@@ -430,6 +463,9 @@
                 }
               });
             }
+            synchronizeMemberTasks();
+            saveTasks(tasks.value);
+            saveMembers(members.value);
             selectedTask.value = null;
           };
 
