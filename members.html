@@ -99,54 +99,68 @@
                 </div>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                <div
-                  v-for="(task, index) in member.tasks.slice(0, showAllTasks[member.id] ? undefined : 3)"
-                  :key="task.id"
-                  class="border rounded p-2 cursor-pointer hover:bg-gray-50"
-                  @click="openTaskDetail(task)"
-                >
-                  <div class="flex justify-between">
-                    <span class="font-mono">{{ task.number }}</span>
-                    <span :class="getStatusClass(task.status)"
-                      >{{ task.status }}</span
-                    >
-                  </div>
-                  <div class="text-sm font-medium">{{ task.title }}</div>
-                  <div class="flex justify-between items-center mt-1">
-                    <!-- プログレスバー -->
-                    <div class="flex items-center gap-2 flex-1 mr-2">
-                      <div
-                        class="flex-1 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full h-6 overflow-hidden shadow-inner relative"
+                <!-- タスクが存在する場合 -->
+                <template v-if="member.tasks.length > 0">
+                  <div
+                    v-for="(task, index) in member.tasks.slice(0, showAllTasks[member.id] ? undefined : 3)"
+                    :key="task.id"
+                    class="border rounded p-2 cursor-pointer hover:bg-gray-50"
+                    @click="openTaskDetail(task)"
+                  >
+                    <div class="flex justify-between">
+                      <span class="font-mono">{{ task.number }}</span>
+                      <span :class="getStatusClass(task.status)"
+                        >{{ task.status }}</span
                       >
+                    </div>
+                    <div class="text-sm font-medium">{{ task.title }}</div>
+                    <div class="flex justify-between items-center mt-1">
+                      <!-- プログレスバー -->
+                      <div class="flex items-center gap-2 flex-1 mr-2">
                         <div
-                          class="h-full rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 shadow-lg transition-all duration-700 ease-out relative"
-                          :style="`width: ${task.progress}%`"
+                          class="flex-1 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full h-6 overflow-hidden shadow-inner relative"
                         >
-                          <!-- グロー効果 -->
                           <div
-                            class="absolute inset-0 bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-500 opacity-60 animate-pulse"
-                          ></div>
-                          <!-- ハイライト効果 -->
-                          <div
-                            class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-40 rounded-full"
-                          ></div>
-                        </div>
-                        <!-- パーセンテージ表示（バー内に配置） -->
-                        <div
-                          class="absolute inset-0 flex items-center justify-center z-10"
-                        >
-                          <span
-                            class="text-sm font-bold text-white drop-shadow-lg"
-                            >{{ task.progress }}%</span
+                            class="h-full rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 shadow-lg transition-all duration-700 ease-out relative"
+                            :style="`width: ${task.progress}%`"
                           >
+                            <!-- グロー効果 -->
+                            <div
+                              class="absolute inset-0 bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-500 opacity-60 animate-pulse"
+                            ></div>
+                            <!-- ハイライト効果 -->
+                            <div
+                              class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-40 rounded-full"
+                            ></div>
+                          </div>
+                          <!-- パーセンテージ表示（バー内に配置） -->
+                          <div
+                            class="absolute inset-0 flex items-center justify-center z-10"
+                          >
+                            <span
+                              class="text-sm font-bold text-white drop-shadow-lg"
+                              >{{ task.progress }}%</span
+                            >
+                          </div>
                         </div>
                       </div>
+                      <!-- 緊急度 -->
+                      <span :class="getPriorityClass(task.priority)"
+                        >緊急度: {{ task.priority }}</span
+                      >
                     </div>
-                    <!-- 緊急度 -->
-                    <span :class="getPriorityClass(task.priority)"
-                      >緊急度: {{ task.priority }}</span
-                    >
                   </div>
+                </template>
+
+                <!-- タスクがない場合 -->
+                <div
+                  v-else
+                  class="border rounded p-4 text-center text-gray-500 bg-gray-50 col-span-full"
+                >
+                  <i
+                    class="fas fa-clipboard-list text-2xl mb-2 text-gray-400"
+                  ></i>
+                  <div class="text-sm">No Task 😴</div>
                 </div>
               </div>
               <button
