@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-
-// メモリ内のデータストア
-let issues = [];
+import { issues } from '../../../lib/data.js';
 
 export async function POST(request) {
   try {
