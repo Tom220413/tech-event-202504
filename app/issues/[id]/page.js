@@ -28,6 +28,7 @@ export default function IssueDetail({ params }) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editedIssue, setEditedIssue] = useState(null);
   const [error, setError] = useState(null);
+  const [issues, setIssues] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -86,16 +87,77 @@ export default function IssueDetail({ params }) {
     setIsDeleteModalOpen(false);
   };
 
-  const handleStatusToggle = () => {
-    // 実際のAPI呼び出しに置き換える
-    setIssue({ ...issue, flg: !issue.flg });
+  const handleStatusToggle = async () => {
+    try {
+      const response = await fetch('/api/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: resolvedParams.id,
+          flg: !issue.flg
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('状態の更新に失敗しました');
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || '状態の更新に失敗しました');
+      }
+
+      // 現在のissueの状態を更新
+      setIssue(prevIssue => ({
+        ...prevIssue,
+        flg: !prevIssue.flg
+      }));
+
+      // 一覧画面のデータを更新
+      const updatedIssues = issues.map(i => 
+        i.id === resolvedParams.id 
+          ? { ...i, flg: !i.flg }
+          : i
+      );
+      setIssues(updatedIssues);
+
+    } catch (error) {
+      console.error('Failed to update issue status:', error);
+      setError(error.message || '状態の更新に失敗しました');
+    }
   };
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
-    // 実際のAPI呼び出しに置き換える
-    setIssue(editedIssue);
-    setIsEditMode(false);
+    try {
+      const response = await fetch('/api/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: resolvedParams.id,
+          ...editedIssue
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('更新に失敗しました');
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || '更新に失敗しました');
+      }
+
+      setIssue(result.data);
+      setIsEditMode(false);
+    } catch (error) {
+      console.error('Failed to update issue:', error);
+      setError(error.message || '更新に失敗しました');
+    }
   };
 
   const handleEditInputChange = (e) => {
@@ -124,6 +186,10 @@ export default function IssueDetail({ params }) {
       default:
         return '';
     }
+  };
+
+  const handleBackClick = () => {
+    router.push('/?refresh=true');
   };
 
   if (error) {
@@ -302,7 +368,7 @@ export default function IssueDetail({ params }) {
           </button>
           <button 
             className={styles.backButton}
-            onClick={() => router.push('/')}
+            onClick={handleBackClick}
           >
             一覧に戻る
           </button>
