@@ -18,7 +18,10 @@
     <div id="app">
       <!-- ヘッダー -->
       <header
-        class="fixed top-0 left-0 right-0 bg-white shadow-md py-4 z-50 flex items-center px-6"
+        :class="[
+          'fixed top-0 left-0 right-0 bg-white shadow-md py-4 z-50 flex items-center px-6 transition-transform duration-300',
+          isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
+        ]"
       >
         <h1 class="text-2xl font-bold mr-8">RemoteWorks</h1>
         <nav class="flex space-x-4">
@@ -36,7 +39,7 @@
       </header>
 
       <!-- メインコンテンツ -->
-      <main class="container mx-auto px-4 pt-10">
+      <main class="container mx-auto px-4 pt-20">
         <!-- メンバー一覧 -->
         <div class="mb-8">
           <div class="flex justify-between items-center mb-4">
@@ -324,6 +327,8 @@
         createApp,
         ref,
         computed,
+        onMounted,
+        onUnmounted,
       } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
       import {
         loadMembers,
@@ -340,6 +345,8 @@
           const selectedTask = ref(null);
           const showAllTasks = ref({});
           const hoveringStatus = ref({});
+          const isHeaderVisible = ref(true);
+          let lastScrollY = 0;
 
           const newMember = ref({
             name: "",
@@ -378,6 +385,20 @@
               [memberId]: value,
             };
           };
+
+          const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            isHeaderVisible.value = currentScrollY < lastScrollY || currentScrollY < 10;
+            lastScrollY = currentScrollY;
+          };
+
+          onMounted(() => {
+            window.addEventListener('scroll', handleScroll);
+          });
+
+          onUnmounted(() => {
+            window.removeEventListener('scroll', handleScroll);
+          });
 
           //====================
           // データの永続化設定
@@ -542,6 +563,7 @@
             hoveringStatus,
             setHover,
             handleIconFileUpload,
+            isHeaderVisible,
           };
         },
       }).mount("#app");

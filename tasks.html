@@ -18,19 +18,25 @@
     <div id="app">
       <!-- ヘッダー -->
       <header
-        class="fixed top-0 left-0 right-0 bg-white shadow-md h-[30px] z-50 flex items-center px-4"
+        class="fixed top-0 left-0 right-0 bg-white shadow-md py-4 z-50 flex items-center px-6"
       >
-        <h1 class="text-lg font-bold mr-8">リモートワークス</h1>
+        <h1 class="text-2xl font-bold mr-8">RemoteWorks</h1>
         <nav class="flex space-x-4">
-          <a href="members.html" class="text-gray-600 hover:text-blue-600"
+          <a
+            href="http://127.0.0.1:3000/members.html"
+            class="text-blue-600 font-medium"
             >メンバー一覧</a
           >
-          <a href="tasks.html" class="text-blue-600 font-medium">タスク一覧</a>
+          <a
+            href="http://127.0.0.1:3000/tasks.html"
+            class="text-gray-600 hover:text-blue-600"
+            >タスク一覧</a
+          >
         </nav>
       </header>
 
       <!-- メインコンテンツ -->
-      <main class="container mx-auto px-4 pt-10">
+      <main class="container mx-auto px-4 pt-20">
         <!-- タスク一覧 -->
         <div>
           <div class="flex justify-between items-center mb-4">
