@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
+import { issues } from '../register/route';
 
 // メモリ内のデータストアを/api/registerと共有
-let issues = [];
+let registeredIssues = [];
 
 export async function POST(request) {
   try {

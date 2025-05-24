@@ -1,4 +1,4 @@
-import { mockIssues } from './mockData';
+import { issues } from '../register/route';
 
 // 優先度の定義
 const PRIORITY = {
@@ -24,6 +24,14 @@ export async function GET(request) {
     const status = searchParams.get('status');
     const tag = searchParams.get('tag');
 
+    // フィルタリングされたissuesを取得
+    let filteredIssues = [...issues];
+
+    // タグでフィルタリング
+    if (tag) {
+      filteredIssues = filteredIssues.filter(issue => issue.tag === tag);
+    }
+
     // データが存在しない場合は400を返す
     if (filteredIssues.length === 0) {
       return Response.json({
@@ -35,13 +43,13 @@ export async function GET(request) {
     return Response.json({
       content: filteredIssues.map(issue => ({
         id: issue.id,
-        create_date: issue.create_date,
-        username: issue.username,
+        create_date: issue.registration_date,
+        username: issue.Inputter_name,
         tag: issue.tag,
-        isResolve: issue.flg,
+        isResolve: false,
         content: issue.content,
         title: issue.title,
-        urgency: issue.urgency,
+        urgency: issue.priority,
         limit: issue.limit
       }))
     }, { status: 200 });
