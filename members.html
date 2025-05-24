@@ -22,10 +22,14 @@
       >
         <h1 class="text-lg font-bold mr-8">リモートワークス</h1>
         <nav class="flex space-x-4">
-          <a href="members.html" class="text-blue-600 font-medium"
+          <a
+            href="http://127.0.0.1:3000/members.html"
+            class="text-blue-600 font-medium"
             >メンバー一覧</a
           >
-          <a href="tasks.html" class="text-gray-600 hover:text-blue-600"
+          <a
+            href="http://127.0.0.1:3000/tasks.html"
+            class="text-gray-600 hover:text-blue-600"
             >タスク一覧</a
           >
         </nav>
@@ -58,24 +62,37 @@
                 />
                 <div class="flex-1 flex items-center">
                   <h3 class="text-lg font-semibold">{{ member.name }}</h3>
-                  <span class="ml-2 px-2 py-1 rounded text-sm border bg-gray-50"
-                    >{{ member.status }}</span
+                  <div
+                    class="ml-2 relative"
+                    @mouseenter="setHover(member.id, true)"
+                    @mouseleave="setHover(member.id, false)"
+                    style="min-width: 70px;"
                   >
-                </div>
-                <div class="flex items-center">
-                  <select
-                    v-model="member.status"
-                    @change="saveMembers(members)"
-                    class="border rounded px-2 py-1"
-                  >
-                    <option
-                      v-for="status in attendanceStatuses"
-                      :key="status"
-                      :value="status"
+                    <!-- 通常はテキスト -->
+                    <span
+                      v-if="!hoveringStatus[member.id]"
+                      class="px-2 py-1 rounded text-sm border bg-gray-50 cursor-pointer"
                     >
-                      {{ status }}
-                    </option>
-                  </select>
+                      {{ member.status }}
+                    </span>
+                    <!-- ホバー時は候補バッジを横並びで表示 -->
+                    <div
+                      v-else
+                      class="absolute left-0 top-0 flex gap-1 bg-white border rounded shadow px-2 py-1 z-10"
+                    >
+                      <span
+                        v-for="status in attendanceStatuses"
+                        :key="status"
+                        @click="member.status = status; setHover(member.id, false)"
+                        :class="[
+                          'px-2 py-1 rounded text-sm cursor-pointer',
+                          status === member.status ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-blue-100'
+                        ]"
+                      >
+                        {{ status }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
@@ -287,6 +304,7 @@
           const showNewMemberModal = ref(false);
           const selectedTask = ref(null);
           const showAllTasks = ref({});
+          const hoveringStatus = ref({});
 
           const newMember = ref({
             name: "",
@@ -318,6 +336,10 @@
 
           const toggleShowAllTasks = (memberId) => {
             showAllTasks.value[memberId] = !showAllTasks.value[memberId];
+          };
+
+          const setHover = (memberId, value) => {
+            hoveringStatus.value = { ...hoveringStatus.value, [memberId]: value };
           };
 
           //====================
@@ -467,6 +489,8 @@
             openTaskDetail,
             updateTask,
             deleteTask,
+            hoveringStatus,
+            setHover,
           };
         },
       }).mount("#app");
