@@ -50,8 +50,11 @@
             <div
               v-for="task in tasks"
               :key="task.id"
-              class="bg-white rounded-lg shadow p-4 cursor-pointer"
-              @click="openTaskDetail(task)"
+              class="bg-white rounded-lg shadow p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:bg-blue-50"
+              :class="{
+                'ring-2 ring-blue-500 bg-blue-100 scale-[1.03] shadow-2xl': selectedTask && selectedTask.id === task.id
+              }"
+              @click="selectTask(task)"
             >
               <div class="flex justify-between items-start">
                 <div>
@@ -178,6 +181,7 @@
       createApp({
         setup() {
           const showNewTaskModal = ref(false);
+          const selectedTask = ref(null);
 
           const newTask = ref({
             title: "",
@@ -315,7 +319,9 @@
             };
           };
 
-          const openTaskDetail = (task) => {
+          const selectTask = (task) => {
+            selectedTask.value = task;
+            // 必要に応じて task-detail.html への遷移もここで
             window.location.href = `task-detail.html?id=${task.id}`;
           };
 
@@ -330,7 +336,8 @@
             getMemberIcon,
             getMemberName,
             addTask,
-            openTaskDetail,
+            selectTask,
+            selectedTask,
           };
         },
       }).mount("#app");
