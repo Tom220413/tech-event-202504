@@ -67,10 +67,12 @@
                   @click="openEditMemberModal(member)"
                 />
                 <div class="flex-1 flex items-center">
-                  <h3 
+                  <h3
                     class="text-lg font-semibold cursor-pointer hover:text-gray-700"
                     @click="openEditMemberModal(member)"
-                  >{{ member.name }}</h3>
+                  >
+                    {{ member.name }}
+                  </h3>
                   <div
                     class="ml-2 relative"
                     @mouseenter="setHover(member.id, true)"
@@ -187,7 +189,9 @@
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
       >
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
-          <h3 class="text-xl font-bold mb-4">{{ isEditing ? 'メンバー編集' : 'メンバー追加' }}</h3>
+          <h3 class="text-xl font-bold mb-4">
+            {{ isEditing ? 'メンバー編集' : 'メンバー追加' }}
+          </h3>
           <div class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700"
@@ -375,8 +379,14 @@
             icon: "",
           });
 
-          const attendanceStatuses = ["出社", "休憩", "退勤", "外出", "在宅"];
-          const taskStatuses = ["未着手", "進行中", "完了", "保留"];
+          const attendanceStatuses = [
+            "🏢 出社",
+            "☕ 休憩",
+            "👋 退勤",
+            "🚶 外出",
+            "🏠 在宅",
+          ];
+          const taskStatuses = ["📋 未着手", "⚡ 進行中", "✅ 完了", "⏸️ 保留"];
 
           const getStatusClass = (status) => {
             const classes = {
@@ -431,13 +441,13 @@
               id: 1,
               name: "山田太郎",
               icon: "https://i.pravatar.cc/150?img=1",
-              status: "出社",
+              status: "🏢 出社",
             },
             {
               id: 2,
               name: "鈴木花子",
               icon: "https://i.pravatar.cc/150?img=2",
-              status: "在宅",
+              status: "🏠 在宅",
             },
           ];
 
@@ -448,7 +458,7 @@
               title: "ログイン機能の実装",
               description: "ユーザー認証システムの実装",
               assigneeId: 1,
-              status: "進行中",
+              status: "⚡ 進行中",
               priority: "高",
               progress: 50,
             },
@@ -458,7 +468,7 @@
               title: "UIデザインの改善",
               description: "ダッシュボードのレイアウト改善",
               assigneeId: 2,
-              status: "未着手",
+              status: "📋 未着手",
               priority: "中",
               progress: 0,
             },
@@ -497,7 +507,7 @@
               id,
               name: newMember.value.name,
               icon: newMember.value.icon,
-              status: "出社",
+              status: "🏢 出社",
               tasks: [],
             });
             saveMembers(members.value);
@@ -589,7 +599,9 @@
           };
 
           const updateMember = () => {
-            const index = members.value.findIndex(m => m.id === newMember.value.id);
+            const index = members.value.findIndex(
+              (m) => m.id === newMember.value.id
+            );
             if (index !== -1) {
               members.value[index] = {
                 ...members.value[index],
