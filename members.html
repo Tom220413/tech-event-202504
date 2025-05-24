@@ -1,278 +1,419 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>メンバー一覧 - リモートワークス</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100">
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100">
     <div id="app">
-        <!-- ヘッダー -->
-        <header class="fixed top-0 left-0 right-0 bg-white shadow-md h-[30px] z-50 flex items-center px-4">
-            <h1 class="text-lg font-bold mr-8">リモートワークス</h1>
-            <nav class="flex space-x-4">
-                <a href="http://127.0.0.1:3000/yurikawa/members.html" class="text-blue-600 font-medium">メンバー一覧</a>
-                <a href="http://127.0.0.1:3000/yurikawa/tasks.html" class="text-gray-600 hover:text-blue-600">タスク一覧</a>
-            </nav>
-        </header>
+      <!-- ヘッダー -->
+      <header
+        class="fixed top-0 left-0 right-0 bg-white shadow-md h-[30px] z-50 flex items-center px-4"
+      >
+        <h1 class="text-lg font-bold mr-8">リモートワークス</h1>
+        <nav class="flex space-x-4">
+          <a
+            href="http://127.0.0.1:3000/members.html"
+            class="text-blue-600 font-medium"
+            >メンバー一覧</a
+          >
+          <a
+            href="http://127.0.0.1:3000/tasks.html"
+            class="text-gray-600 hover:text-blue-600"
+            >タスク一覧</a
+          >
+        </nav>
+      </header>
 
-        <!-- メインコンテンツ -->
-        <main class="container mx-auto px-4 pt-10">
-            <!-- メンバー一覧 -->
-            <div class="mb-8">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold">メンバー一覧</h2>
-                    <button @click="showNewMemberModal = true" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                        メンバー追加
-                    </button>
+      <!-- メインコンテンツ -->
+      <main class="container mx-auto px-4 pt-10">
+        <!-- メンバー一覧 -->
+        <div class="mb-8">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">メンバー一覧</h2>
+            <button
+              @click="showNewMemberModal = true"
+              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              メンバー追加
+            </button>
+          </div>
+          <div class="grid gap-4">
+            <div
+              v-for="member in members"
+              :key="member.id"
+              class="bg-white rounded-lg shadow p-4"
+            >
+              <div class="flex items-center mb-4">
+                <img
+                  :src="member.icon"
+                  :alt="member.name"
+                  class="w-12 h-12 rounded-full mr-4"
+                />
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold">{{ member.name }}</h3>
                 </div>
-                <div class="grid gap-4">
-                    <div v-for="member in members" :key="member.id" class="bg-white rounded-lg shadow p-4">
-                        <div class="flex items-center mb-4">
-                            <img :src="member.icon" :alt="member.name" class="w-12 h-12 rounded-full mr-4">
-                            <div class="flex-1">
-                                <h3 class="text-lg font-semibold">{{ member.name }}</h3>
-                            </div>
-                            <div class="flex items-center">
-                                <select v-model="member.status" class="border rounded px-2 py-1">
-                                    <option v-for="status in attendanceStatuses" :key="status" :value="status">
-                                        {{ status }}
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="grid gap-2">
-                            <div v-for="(task, index) in member.tasks.slice(0, showAllTasks[member.id] ? undefined : 3)" 
-                                 :key="task.id" 
-                                 class="border rounded p-2 cursor-pointer hover:bg-gray-50"
-                                 @click="openTaskDetail(task)">
-                                <div class="flex justify-between">
-                                    <span class="font-mono">{{ task.number }}</span>
-                                    <span :class="getStatusClass(task.status)">{{ task.status }}</span>
-                                </div>
-                                <div class="text-sm font-medium">{{ task.title }}</div>
-                                <div class="flex justify-between items-center mt-1">
-                                    <span class="text-xs">進捗: {{ task.progress }}%</span>
-                                    <span :class="getPriorityClass(task.priority)">{{ task.priority }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <button v-if="member.tasks.length > 3" 
-                                @click="toggleShowAllTasks(member.id)"
-                                class="text-blue-500 text-sm mt-2">
-                            {{ showAllTasks[member.id] ? '閉じる' : 'もっと見る' }}
-                        </button>
-                    </div>
+                <div class="flex items-center">
+                  <select
+                    v-model="member.status"
+                    class="border rounded px-2 py-1"
+                  >
+                    <option
+                      v-for="status in attendanceStatuses"
+                      :key="status"
+                      :value="status"
+                    >
+                      {{ status }}
+                    </option>
+                  </select>
                 </div>
+              </div>
+              <div class="grid gap-2">
+                <div
+                  v-for="(task, index) in member.tasks.slice(0, showAllTasks[member.id] ? undefined : 3)"
+                  :key="task.id"
+                  class="border rounded p-2 cursor-pointer hover:bg-gray-50"
+                  @click="openTaskDetail(task)"
+                >
+                  <div class="flex justify-between">
+                    <span class="font-mono">{{ task.number }}</span>
+                    <span :class="getStatusClass(task.status)"
+                      >{{ task.status }}</span
+                    >
+                  </div>
+                  <div class="text-sm font-medium">{{ task.title }}</div>
+                  <div class="flex justify-between items-center mt-1">
+                    <span class="text-xs">進捗: {{ task.progress }}%</span>
+                    <span :class="getPriorityClass(task.priority)"
+                      >{{ task.priority }}</span
+                    >
+                  </div>
+                </div>
+              </div>
+              <button
+                v-if="member.tasks.length > 3"
+                @click="toggleShowAllTasks(member.id)"
+                class="text-blue-500 text-sm mt-2"
+              >
+                {{ showAllTasks[member.id] ? '閉じる' : 'もっと見る' }}
+              </button>
             </div>
-        </main>
-
-        <!-- モーダル -->
-        <div v-if="showNewMemberModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div class="bg-white rounded-lg p-6 w-full max-w-md">
-                <h3 class="text-xl font-bold mb-4">メンバー追加</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">名前</label>
-                        <input v-model="newMember.name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">アイコンURL</label>
-                        <input v-model="newMember.icon" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                    </div>
-                    <div class="flex justify-end gap-2">
-                        <button @click="showNewMemberModal = false" class="px-4 py-2 border rounded">キャンセル</button>
-                        <button @click="addMember" class="px-4 py-2 bg-blue-500 text-white rounded">追加</button>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
+      </main>
 
-        <div v-if="selectedTask" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div class="bg-white rounded-lg p-6 w-full max-w-md">
-                <h3 class="text-xl font-bold mb-4">タスク詳細</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">タイトル</label>
-                        <input v-model="selectedTask.title" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">内容</label>
-                        <textarea v-model="selectedTask.description" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">担当者</label>
-                        <select v-model="selectedTask.assigneeId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                            <option v-for="member in members" :key="member.id" :value="member.id">
-                                {{ member.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">ステータス</label>
-                        <select v-model="selectedTask.status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                            <option v-for="status in taskStatuses" :key="status" :value="status">
-                                {{ status }}
-                            </option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">緊急度</label>
-                        <select v-model="selectedTask.priority" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                            <option value="高">高</option>
-                            <option value="中">中</option>
-                            <option value="低">低</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">進捗状況</label>
-                        <select v-model="selectedTask.progress" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                            <option v-for="n in 11" :key="n" :value="(n-1)*10">{{ (n-1)*10 }}%</option>
-                        </select>
-                    </div>
-                    <div class="flex justify-end gap-2">
-                        <button @click="deleteTask" class="px-4 py-2 bg-red-500 text-white rounded">削除</button>
-                        <button @click="selectedTask = null" class="px-4 py-2 border rounded">閉じる</button>
-                        <button @click="updateTask" class="px-4 py-2 bg-blue-500 text-white rounded">更新</button>
-                    </div>
-                </div>
+      <!-- モーダル -->
+      <div
+        v-if="showNewMemberModal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+      >
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+          <h3 class="text-xl font-bold mb-4">メンバー追加</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >名前</label
+              >
+              <input
+                v-model="newMember.name"
+                type="text"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              />
             </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >アイコンURL</label
+              >
+              <input
+                v-model="newMember.icon"
+                type="text"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              />
+            </div>
+            <div class="flex justify-end gap-2">
+              <button
+                @click="showNewMemberModal = false"
+                class="px-4 py-2 border rounded"
+              >
+                キャンセル
+              </button>
+              <button
+                @click="addMember"
+                class="px-4 py-2 bg-blue-500 text-white rounded"
+              >
+                追加
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div
+        v-if="selectedTask"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+      >
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+          <h3 class="text-xl font-bold mb-4">タスク詳細</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >タイトル</label
+              >
+              <input
+                v-model="selectedTask.title"
+                type="text"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >内容</label
+              >
+              <textarea
+                v-model="selectedTask.description"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              ></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >担当者</label
+              >
+              <select
+                v-model="selectedTask.assigneeId"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              >
+                <option
+                  v-for="member in members"
+                  :key="member.id"
+                  :value="member.id"
+                >
+                  {{ member.name }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >ステータス</label
+              >
+              <select
+                v-model="selectedTask.status"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              >
+                <option
+                  v-for="status in taskStatuses"
+                  :key="status"
+                  :value="status"
+                >
+                  {{ status }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >緊急度</label
+              >
+              <select
+                v-model="selectedTask.priority"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              >
+                <option value="高">高</option>
+                <option value="中">中</option>
+                <option value="低">低</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >進捗状況</label
+              >
+              <select
+                v-model="selectedTask.progress"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              >
+                <option v-for="n in 11" :key="n" :value="(n-1)*10">
+                  {{ (n-1)*10 }}%
+                </option>
+              </select>
+            </div>
+            <div class="flex justify-end gap-2">
+              <button
+                @click="deleteTask"
+                class="px-4 py-2 bg-red-500 text-white rounded"
+              >
+                削除
+              </button>
+              <button
+                @click="selectedTask = null"
+                class="px-4 py-2 border rounded"
+              >
+                閉じる
+              </button>
+              <button
+                @click="updateTask"
+                class="px-4 py-2 bg-blue-500 text-white rounded"
+              >
+                更新
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-<script type="module">
-import { createApp, ref, computed } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+    <script type="module">
+      import {
+        createApp,
+        ref,
+        computed,
+      } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
 
-createApp({
-    setup() {
-        const members = ref([
+      createApp({
+        setup() {
+          const members = ref([
             {
-                id: 1,
-                name: '山田太郎',
-                icon: 'https://i.pravatar.cc/150?img=1',
-                status: '出社',
-                tasks: []
+              id: 1,
+              name: "山田太郎",
+              icon: "https://i.pravatar.cc/150?img=1",
+              status: "出社",
+              tasks: [],
             },
             {
-                id: 2,
-                name: '鈴木花子',
-                icon: 'https://i.pravatar.cc/150?img=2',
-                status: '在宅',
-                tasks: []
-            }
-        ])
+              id: 2,
+              name: "鈴木花子",
+              icon: "https://i.pravatar.cc/150?img=2",
+              status: "在宅",
+              tasks: [],
+            },
+          ]);
 
-        const tasks = ref([
+          const tasks = ref([
             {
-                id: 1,
-                number: 'TSK-001',
-                title: 'ログイン機能の実装',
-                description: 'ユーザー認証システムの実装',
-                assigneeId: 1,
-                status: '進行中',
-                priority: '高',
-                progress: 50
+              id: 1,
+              number: "TSK-001",
+              title: "ログイン機能の実装",
+              description: "ユーザー認証システムの実装",
+              assigneeId: 1,
+              status: "進行中",
+              priority: "高",
+              progress: 50,
             },
             {
-                id: 2,
-                number: 'TSK-002',
-                title: 'UIデザインの改善',
-                description: 'ダッシュボードのレイアウト改善',
-                assigneeId: 2,
-                status: '未着手',
-                priority: '中',
-                progress: 0
-            }
-        ])
+              id: 2,
+              number: "TSK-002",
+              title: "UIデザインの改善",
+              description: "ダッシュボードのレイアウト改善",
+              assigneeId: 2,
+              status: "未着手",
+              priority: "中",
+              progress: 0,
+            },
+          ]);
 
-        const showNewMemberModal = ref(false)
-        const selectedTask = ref(null)
-        const showAllTasks = ref({})
+          const showNewMemberModal = ref(false);
+          const selectedTask = ref(null);
+          const showAllTasks = ref({});
 
-        const newMember = ref({
-            name: '',
-            icon: 'https://i.pravatar.cc/150?img=' + Math.floor(Math.random() * 70)
-        })
+          const newMember = ref({
+            name: "",
+            icon:
+              "https://i.pravatar.cc/150?img=" + Math.floor(Math.random() * 70),
+          });
 
-        const attendanceStatuses = ['出社', '休憩', '退勤', '外出', '在宅']
-        const taskStatuses = ['未着手', '進行中', '完了', '保留']
+          const attendanceStatuses = ["出社", "休憩", "退勤", "外出", "在宅"];
+          const taskStatuses = ["未着手", "進行中", "完了", "保留"];
 
-        const getStatusClass = (status) => {
+          const getStatusClass = (status) => {
             const classes = {
-                '未着手': 'bg-gray-100 text-gray-800',
-                '進行中': 'bg-blue-100 text-blue-800',
-                '完了': 'bg-green-100 text-green-800',
-                '保留': 'bg-yellow-100 text-yellow-800'
-            }
-            return `px-2 py-1 rounded text-sm ${classes[status] || ''}`
-        }
+              未着手: "bg-gray-100 text-gray-800",
+              進行中: "bg-blue-100 text-blue-800",
+              完了: "bg-green-100 text-green-800",
+              保留: "bg-yellow-100 text-yellow-800",
+            };
+            return `px-2 py-1 rounded text-sm ${classes[status] || ""}`;
+          };
 
-        const getPriorityClass = (priority) => {
+          const getPriorityClass = (priority) => {
             const classes = {
-                '高': 'bg-red-100 text-red-800',
-                '中': 'bg-green-100 text-green-800',
-                '低': 'bg-gray-100 text-gray-800'
-            }
-            return `px-2 py-1 rounded text-sm ${classes[priority] || ''}`
-        }
+              高: "bg-red-100 text-red-800",
+              中: "bg-green-100 text-green-800",
+              低: "bg-gray-100 text-gray-800",
+            };
+            return `px-2 py-1 rounded text-sm ${classes[priority] || ""}`;
+          };
 
-        const toggleShowAllTasks = (memberId) => {
-            showAllTasks.value[memberId] = !showAllTasks.value[memberId]
-        }
+          const toggleShowAllTasks = (memberId) => {
+            showAllTasks.value[memberId] = !showAllTasks.value[memberId];
+          };
 
-        const addMember = () => {
-            const id = Math.max(...members.value.map(m => m.id)) + 1
+          const addMember = () => {
+            const id = Math.max(...members.value.map((m) => m.id)) + 1;
             members.value.push({
-                id,
-                name: newMember.value.name,
-                icon: newMember.value.icon,
-                status: '出社',
-                tasks: []
-            })
-            showNewMemberModal.value = false
+              id,
+              name: newMember.value.name,
+              icon: newMember.value.icon,
+              status: "出社",
+              tasks: [],
+            });
+            showNewMemberModal.value = false;
             newMember.value = {
-                name: '',
-                icon: 'https://i.pravatar.cc/150?img=' + Math.floor(Math.random() * 70)
-            }
-        }
+              name: "",
+              icon:
+                "https://i.pravatar.cc/150?img=" +
+                Math.floor(Math.random() * 70),
+            };
+          };
 
-        const openTaskDetail = (task) => {
-            selectedTask.value = { ...task }
-        }
+          const openTaskDetail = (task) => {
+            selectedTask.value = { ...task };
+          };
 
-        const updateTask = () => {
-            const index = tasks.value.findIndex(t => t.id === selectedTask.value.id)
+          const updateTask = () => {
+            const index = tasks.value.findIndex(
+              (t) => t.id === selectedTask.value.id
+            );
             if (index !== -1) {
-                tasks.value[index] = { ...selectedTask.value }
-                // Update member's tasks
-                members.value.forEach(member => {
-                    const taskIndex = member.tasks.findIndex(t => t.id === selectedTask.value.id)
-                    if (taskIndex !== -1) {
-                        member.tasks[taskIndex] = { ...selectedTask.value }
-                    }
-                })
+              tasks.value[index] = { ...selectedTask.value };
+              // Update member's tasks
+              members.value.forEach((member) => {
+                const taskIndex = member.tasks.findIndex(
+                  (t) => t.id === selectedTask.value.id
+                );
+                if (taskIndex !== -1) {
+                  member.tasks[taskIndex] = { ...selectedTask.value };
+                }
+              });
             }
-            selectedTask.value = null
-        }
+            selectedTask.value = null;
+          };
 
-        const deleteTask = () => {
-            const index = tasks.value.findIndex(t => t.id === selectedTask.value.id)
+          const deleteTask = () => {
+            const index = tasks.value.findIndex(
+              (t) => t.id === selectedTask.value.id
+            );
             if (index !== -1) {
-                tasks.value.splice(index, 1)
-                // Remove from member's tasks
-                members.value.forEach(member => {
-                    const taskIndex = member.tasks.findIndex(t => t.id === selectedTask.value.id)
-                    if (taskIndex !== -1) {
-                        member.tasks.splice(taskIndex, 1)
-                    }
-                })
+              tasks.value.splice(index, 1);
+              // Remove from member's tasks
+              members.value.forEach((member) => {
+                const taskIndex = member.tasks.findIndex(
+                  (t) => t.id === selectedTask.value.id
+                );
+                if (taskIndex !== -1) {
+                  member.tasks.splice(taskIndex, 1);
+                }
+              });
             }
-            selectedTask.value = null
-        }
+            selectedTask.value = null;
+          };
 
-        return {
+          return {
             members,
             tasks,
             showNewMemberModal,
@@ -287,10 +428,10 @@ createApp({
             addMember,
             openTaskDetail,
             updateTask,
-            deleteTask
-        }
-    }
-}).mount('#app')
-</script>
-</body>
-</html> 
+            deleteTask,
+          };
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
