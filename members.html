@@ -18,9 +18,9 @@
     <div id="app">
       <!-- ヘッダー -->
       <header
-        class="fixed top-0 left-0 right-0 bg-white shadow-md h-[30px] z-50 flex items-center px-4"
+        class="fixed top-0 left-0 right-0 bg-white shadow-md h-[50px] z-50 flex items-center px-6"
       >
-        <h1 class="text-lg font-bold mr-8">リモートワークス</h1>
+        <h1 class="text-2xl font-bold mr-8">RemoteWorks</h1>
         <nav class="flex space-x-4">
           <a
             href="http://127.0.0.1:3000/members.html"
@@ -111,9 +111,7 @@
                   <div class="text-sm font-medium">{{ task.title }}</div>
                   <div class="flex justify-between items-center mt-1">
                     <span class="text-xs">進捗: {{ task.progress }}%</span>
-                    <span :class="getPriorityClass(task.priority)"
-                      >{{ task.priority }}</span
-                    >
+                    <span :class="getPriorityClass(task.priority)">緊急度: {{ task.priority }}</span>
                   </div>
                 </div>
               </div>
