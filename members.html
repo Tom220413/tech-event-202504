@@ -66,7 +66,7 @@
                     class="ml-2 relative"
                     @mouseenter="setHover(member.id, true)"
                     @mouseleave="setHover(member.id, false)"
-                    style="min-width: 70px;"
+                    style="min-width: 70px"
                   >
                     <!-- 通常はテキスト -->
                     <span
@@ -297,6 +297,8 @@
         saveMembers,
         loadTasks,
         saveTasks,
+        isInitialized,
+        markAsInitialized,
       } from "./storage.js";
 
       createApp({
@@ -339,7 +341,10 @@
           };
 
           const setHover = (memberId, value) => {
-            hoveringStatus.value = { ...hoveringStatus.value, [memberId]: value };
+            hoveringStatus.value = {
+              ...hoveringStatus.value,
+              [memberId]: value,
+            };
           };
 
           //====================
@@ -384,15 +389,19 @@
           ];
 
           const members = ref(loadMembers());
-          if (members.value.length === 0) {
-            members.value = defaultMembers;
-            saveMembers(members.value);
-          }
-
           const tasks = ref(loadTasks());
-          if (tasks.value.length === 0) {
-            tasks.value = defaultTasks;
-            saveTasks(tasks.value);
+
+          // 初回のみデフォルトデータを設定
+          if (!isInitialized()) {
+            if (members.value.length === 0) {
+              members.value = defaultMembers;
+              saveMembers(members.value);
+            }
+            if (tasks.value.length === 0) {
+              tasks.value = defaultTasks;
+              saveTasks(tasks.value);
+            }
+            markAsInitialized();
           }
 
           const synchronizeMemberTasks = () => {

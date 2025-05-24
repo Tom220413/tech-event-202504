@@ -2,6 +2,7 @@
 export const STORAGE_KEYS = {
   members: "rw_members",
   tasks: "rw_tasks",
+  initialized: "rw_initialized",
 };
 
 /**
@@ -54,4 +55,19 @@ export function saveTasks(tasks) {
   } catch (e) {
     console.error("タスクデータの保存に失敗:", e);
   }
+}
+
+/**
+ * 初期化済みかどうかを確認する
+ * @returns {boolean}
+ */
+export function isInitialized() {
+  return localStorage.getItem(STORAGE_KEYS.initialized) === "true";
+}
+
+/**
+ * 初期化完了をマークする
+ */
+export function markAsInitialized() {
+  localStorage.setItem(STORAGE_KEYS.initialized, "true");
 }

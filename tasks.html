@@ -167,6 +167,8 @@
         saveMembers,
         loadTasks,
         saveTasks,
+        isInitialized,
+        markAsInitialized,
       } from "./storage.js";
 
       createApp({
@@ -226,15 +228,19 @@
           ];
 
           const members = ref(loadMembers());
-          if (members.value.length === 0) {
-            members.value = defaultMembers;
-            saveMembers(members.value);
-          }
-
           const tasks = ref(loadTasks());
-          if (tasks.value.length === 0) {
-            tasks.value = defaultTasks;
-            saveTasks(tasks.value);
+
+          // 初回のみデフォルトデータを設定
+          if (!isInitialized()) {
+            if (members.value.length === 0) {
+              members.value = defaultMembers;
+              saveMembers(members.value);
+            }
+            if (tasks.value.length === 0) {
+              tasks.value = defaultTasks;
+              saveTasks(tasks.value);
+            }
+            markAsInitialized();
           }
 
           const synchronizeMemberTasks = () => {
