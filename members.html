@@ -72,16 +72,12 @@
                   class="w-12 h-12 rounded-full mr-4"
                 />
                 <div class="flex-1 flex items-center">
-<<<<<<< Updated upstream
                   <h3
                     class="text-lg font-semibold cursor-pointer hover:text-gray-700"
                     @click="openEditMemberModal(member)"
                   >
                     {{ member.name }}
                   </h3>
-=======
-                  <h3 class="text-lg font-semibold">{{ member.name }}</h3>
->>>>>>> Stashed changes
                   <div
                     class="ml-2 relative"
                     @mouseenter="setHover(member.id, true)"
@@ -510,7 +506,7 @@
 
           const addMember = () => {
             if (!newMember.value.name.trim()) {
-              alert('名前を入力してください');
+              alert("名前を入力してください");
               return;
             }
             const id = members.value.length
@@ -613,10 +609,12 @@
 
           const updateMember = () => {
             if (!newMember.value.name.trim()) {
-              alert('名前を入力してください');
+              alert("名前を入力してください");
               return;
             }
-            const index = members.value.findIndex(m => m.id === newMember.value.id);
+            const index = members.value.findIndex(
+              (m) => m.id === newMember.value.id
+            );
             if (index !== -1) {
               members.value[index] = {
                 ...members.value[index],
