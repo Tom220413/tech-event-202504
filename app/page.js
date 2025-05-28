@@ -227,10 +227,6 @@ export default function Home() {
     }
   };
 
-  const handleIssueClick = (issue) => {
-    router.push(`/issues/${issue.id}`);
-  };
-
   const handleEditClick = () => {
     setEditedIssue({ ...selectedIssue });
     setIsEditMode(true);
@@ -282,14 +278,64 @@ export default function Home() {
     }
   };
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
-    const updatedIssues = issues.map(issue =>
-      issue.id === editedIssue.id ? editedIssue : issue
-    );
-    setIssues(updatedIssues);
-    setSelectedIssue(editedIssue);
-    setIsEditMode(false);
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      // データベースに更新を送信
+      const updateData = {
+        title: editedIssue.title,
+        content: editedIssue.content,
+        priority: editedIssue.urgency,
+        tag: editedIssue.tag,
+        limit_date: editedIssue.limit,
+        inputter_name: editedIssue.username
+      };
+
+      console.log('Updating issue with data:', updateData);
+      console.log('Issue ID:', editedIssue.id);
+
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/update?id=${editedIssue.id}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(updateData),
+      });
+
+      console.log('Update response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Update error response:', errorData);
+        throw new Error(errorData.error || '課題の更新に失敗しました');
+      }
+
+      const result = await response.json();
+      console.log('Update result:', result);
+      
+      if (!result.success) {
+        throw new Error(result.error || '課題の更新に失敗しました');
+      }
+
+      // ローカルの状態を更新
+      const updatedIssues = issues.map(issue =>
+        issue.id === editedIssue.id ? editedIssue : issue
+      );
+      setIssues(updatedIssues);
+      setSelectedIssue(editedIssue);
+      setIsEditMode(false);
+
+      // 課題リストを再取得して最新の状態を反映
+      await fetchIssues();
+
+    } catch (error) {
+      console.error('Failed to update issue:', error);
+      setSubmitError(error.message || '課題の更新に失敗しました。もう一度お試しください。');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleEditInputChange = (e) => {
@@ -387,6 +433,12 @@ export default function Home() {
           </div>
 
           <form onSubmit={handleEditSubmit} className={styles.createForm}>
+            {submitError && (
+              <div className={styles.errorMessage}>
+                {submitError}
+              </div>
+            )}
+            
             <div className={styles.formGroup}>
               <label htmlFor="priority">優先度</label>
               <select
@@ -395,6 +447,7 @@ export default function Home() {
                 value={editedIssue.urgency}
                 onChange={handleEditInputChange}
                 className={styles.formSelect}
+                disabled={isSubmitting}
               >
                 {Object.entries(PRIORITY).map(([key, value]) => (
                   <option key={key} value={value}>{value}</option>
@@ -411,6 +464,7 @@ export default function Home() {
                 value={editedIssue.title}
                 onChange={handleEditInputChange}
                 className={styles.formInput}
+                disabled={isSubmitting}
                 required
               />
             </div>
@@ -424,6 +478,7 @@ export default function Home() {
                 onChange={handleEditInputChange}
                 className={styles.formTextarea}
                 rows="5"
+                disabled={isSubmitting}
                 required
               />
             </div>
@@ -436,6 +491,7 @@ export default function Home() {
                 value={editedIssue.tag}
                 onChange={handleEditInputChange}
                 className={styles.formSelect}
+                disabled={isSubmitting}
               >
                 {Object.entries(TAGS).map(([key, value]) => (
                   <option key={key} value={value}>{value}</option>
@@ -452,6 +508,7 @@ export default function Home() {
                 value={editedIssue.limit}
                 onChange={handleEditInputChange}
                 className={styles.formInput}
+                disabled={isSubmitting}
                 required
               />
             </div>
@@ -460,8 +517,9 @@ export default function Home() {
               <button
                 type="submit"
                 className={styles.submitButton}
+                disabled={isSubmitting}
               >
-                更新する
+                {isSubmitting ? '更新中...' : '更新する'}
               </button>
             </div>
           </form>
@@ -774,7 +832,15 @@ export default function Home() {
           ) : (
             <div className={styles.issuesList}>
               {filteredIssues.map((issue) => (
-                <div key={issue.id} className={styles.issueCard}>
+                <div 
+                  key={issue.id} 
+                  className={styles.issueCard}
+                  onClick={() => {
+                    setSelectedIssue(issue);
+                    setIsDetailMode(true);
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className={styles.issueHeader}>
                     <div className={styles.issueStatus}>
                       <span className={`${styles.priority} ${getPriorityClass(issue.urgency)}`}>
