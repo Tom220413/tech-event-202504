@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../lib/auth-context';
+import { supabase } from '../lib/supabase';
 import styles from './page.module.css';
 
 // タグの列挙型
@@ -22,6 +24,7 @@ const PRIORITY = {
 
 export default function Home() {
   const router = useRouter();
+  const { user, loading, isAuthenticated, signOut } = useAuth();
   const [filter, setFilter] = useState('all');
   const [selectedTag, setSelectedTag] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
@@ -33,7 +36,7 @@ export default function Home() {
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [editedIssue, setEditedIssue] = useState(null);
   const [newIssue, setNewIssue] = useState({
-    inputter_name: '山田太郎',
+    inputter_name: user?.user_metadata?.display_name || '山田太郎',
     priority: PRIORITY.MEDIUM,
     title: '',
     content: '',
@@ -44,25 +47,42 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
-  const fetchIssues = async () => {
+  // 認証ヘッダーを取得するヘルパー関数
+  const getAuthHeaders = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+  }, []);
+
+  const fetchIssues = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/list');
+      const headers = await getAuthHeaders();
+      const response = await fetch('/api/issues', {
+        headers
+      });
+      
       if (!response.ok) {
         throw new Error('課題の取得に失敗しました');
       }
       const data = await response.json();
       console.log(data, 'データ')
+      
+      // Supabaseからのデータ形式に対応
       const formattedIssues = data.map(issue => ({
         id: issue.id,
-        create_date: issue.registration_date,
-        username: issue.Inputter_name,
+        create_date: issue.created_at ? issue.created_at.split('T')[0] : issue.registration_date,
+        username: issue.inputter_name,
         urgency: issue.priority,
         title: issue.title,
         content: issue.content,
         tag: issue.tag,
-        limit: issue.limit,
-        flg: issue.isResolve || false
+        limit: issue.limit_date || issue.limit,
+        flg: issue.is_resolved || issue.isResolve || false
       }));
       setIssues(formattedIssues);
     } catch (error) {
@@ -71,11 +91,33 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getAuthHeaders]);
+
+  // 認証チェック
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push('/auth');
+    }
+  }, [loading, isAuthenticated, router]);
 
   useEffect(() => {
-    fetchIssues();
-  }, []);
+    if (isAuthenticated) {
+      fetchIssues();
+    }
+  }, [isAuthenticated, fetchIssues]);
+
+  // ローディング中または未認証の場合は何も表示しない
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>読み込み中...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null; // リダイレクト中
+  }
 
   // 利用可能なタグの一覧を取得
   const availableTags = ['all', ...new Set(issues.map(issue => issue.tag))];
@@ -107,7 +149,7 @@ export default function Home() {
       const formattedDate = today.toISOString().split('T')[0];
       
       const issueData = {
-        Inputter_name: newIssue.inputter_name,
+        inputter_name: newIssue.inputter_name,
         priority: newIssue.priority,
         title: newIssue.title,
         content: newIssue.content,
@@ -116,11 +158,10 @@ export default function Home() {
       };
 
       try {
+        const headers = await getAuthHeaders();
         const response = await fetch('/api/register', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify(issueData),
         });
 
@@ -130,39 +171,32 @@ export default function Home() {
         }
 
         const createdIssue = await response.json();
+        
         // APIからのレスポンスに基づいて新しい課題を作成
-        const newIssue = {
+        const newIssueFormatted = {
           id: createdIssue.id,
-          create_date: formattedDate,
-          username: issueData.Inputter_name,
-          urgency: issueData.priority,
-          title: issueData.title,
-          content: issueData.content,
-          tag: issueData.tag,
-          limit: issueData.limit,
-          flg: false
+          create_date: createdIssue.issue?.create_date || formattedDate,
+          username: createdIssue.issue?.username || issueData.inputter_name,
+          urgency: createdIssue.issue?.urgency || issueData.priority,
+          title: createdIssue.issue?.title || issueData.title,
+          content: createdIssue.issue?.content || issueData.content,
+          tag: createdIssue.issue?.tag || issueData.tag,
+          limit: createdIssue.issue?.limit || issueData.limit,
+          flg: createdIssue.issue?.flg || false
         };
-        setIssues([newIssue, ...issues]);
+        setIssues([newIssueFormatted, ...issues]);
+        
+        // 課題リストを再取得
+        await fetchIssues();
+        
       } catch (apiError) {
-        console.warn('API request failed, falling back to local state:', apiError);
-        // APIが利用できない場合のフォールバック処理
-        const localIssue = {
-          id: issues.length + 1,
-          create_date: formattedDate,
-          username: issueData.Inputter_name,
-          urgency: issueData.priority,
-          title: issueData.title,
-          content: issueData.content,
-          tag: issueData.tag,
-          limit: issueData.limit,
-          flg: false
-        };
-        setIssues([localIssue, ...issues]);
+        console.warn('API request failed:', apiError);
+        throw apiError; // エラーを再スロー
       }
 
       setIsCreateMode(false);
       setNewIssue({
-        inputter_name: '山田太郎',
+        inputter_name: user?.user_metadata?.display_name || '山田太郎',
         priority: PRIORITY.MEDIUM,
         title: '',
         content: '',
@@ -626,12 +660,25 @@ export default function Home() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>開発課題管理</h1>
-        <button 
-          className={styles.createButton}
-          onClick={() => setIsCreateMode(true)}
-        >
-          新規作成
-        </button>
+        <div className={styles.headerActions}>
+          <div className={styles.userInfo}>
+            <span className={styles.userName}>
+              {user?.user_metadata?.display_name || user?.email || 'ユーザー'}
+            </span>
+            <button 
+              className={styles.logoutButton}
+              onClick={signOut}
+            >
+              ログアウト
+            </button>
+          </div>
+          <button 
+            className={styles.createButton}
+            onClick={() => setIsCreateMode(true)}
+          >
+            新規作成
+          </button>
+        </div>
       </div>
       
       <div className={styles.mainContent}>
@@ -715,69 +762,58 @@ export default function Home() {
                     <div className={`${styles.skeleton} ${styles.skeletonPriority}`} />
                   </div>
                   <div className={`${styles.skeleton} ${styles.skeletonTitle}`} />
+                  <div className={`${styles.skeleton} ${styles.skeletonContent}`} />
                   <div className={styles.skeletonMeta}>
-                    <div className={`${styles.skeleton} ${styles.skeletonMetaItem}`} />
-                    <div className={`${styles.skeleton} ${styles.skeletonMetaItem}`} />
-                  </div>
-                  <div className={styles.skeletonMeta}>
-                    <div className={`${styles.skeleton} ${styles.skeletonTag}`} />
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className={`${styles.skeleton} ${styles.skeletonMetaItem}`} />
+                    ))}
                   </div>
                 </div>
               ))}
             </div>
-          ) : filteredIssues.length === 0 ? (
-            <div className={styles.emptyState}>
-              <h2 className={styles.emptyStateTitle}>課題が見つかりません</h2>
-              <p className={styles.emptyStateText}>
-                {filter !== 'all' || selectedTag !== null
-                  ? '選択されたフィルターに一致する課題はありません。'
-                  : 'まだ課題が登録されていません。'}
-              </p>
-              <button
-                className={styles.createButton}
-                onClick={() => setIsCreateMode(true)}
-              >
-                新しい課題を作成
-              </button>
-            </div>
           ) : (
             <div className={styles.issuesList}>
               {filteredIssues.map((issue) => (
-                <div
-                  key={issue.id}
-                  className={`${styles.issueCard} ${issue.flg ? styles.resolved : styles.unresolved}`}
-                  onClick={() => handleIssueClick(issue)}
-                >
+                <div key={issue.id} className={styles.issueCard}>
                   <div className={styles.issueHeader}>
                     <div className={styles.issueStatus}>
+                      <span className={`${styles.priority} ${getPriorityClass(issue.urgency)}`}>
+                        {issue.urgency}
+                      </span>
                       <span className={`${styles.status} ${issue.flg ? styles.statusResolved : styles.statusUnresolved}`}>
                         {issue.flg ? '解決済み' : '未解決'}
                       </span>
                     </div>
-                    <div className={styles.issuePriority}>
-                      <span className={`${styles.priority} ${getPriorityClass(issue.urgency)}`}>
-                        {issue.urgency}
+                    <div className={styles.issueTag}>
+                      <span className={styles.tag}>
+                        <svg className={styles.tagIcon} viewBox="0 0 24 24" width="16" height="16">
+                          <path fill="currentColor" d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>
+                        </svg>
+                        {issue.tag}
                       </span>
                     </div>
                   </div>
-                  <h3 className={styles.issueTitle}>{issue.title}</h3>
-                  <div className={styles.issueFooter}>
-                    <div className={styles.issueMeta}>
-                      <span>担当: {issue.username}</span>
-                      <span>期限: {issue.limit}</span>
-                      <span>経過日数: {calculateDaysPassed(issue.create_date)}日</span>
+
+                  <h2 className={styles.issueTitle}>{issue.title}</h2>
+                  <p className={styles.issueContent}>{issue.content}</p>
+
+                  <div className={styles.issueMeta}>
+                    <div className={styles.issueMetaItem}>
+                      <span className={styles.issueMetaLabel}>担当者</span>
+                      <span className={styles.issueMetaValue}>{issue.username}</span>
                     </div>
-                    <div className={styles.issueDates}>
-                      <span>登録日: {issue.create_date}</span>
+                    <div className={styles.issueMetaItem}>
+                      <span className={styles.issueMetaLabel}>登録日</span>
+                      <span className={styles.issueMetaValue}>{issue.create_date}</span>
                     </div>
-                  </div>
-                  <div className={styles.tags}>
-                    <span className={styles.tag}>
-                      <svg className={styles.tagIcon} viewBox="0 0 24 24" width="16" height="16">
-                        <path fill="currentColor" d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>
-                      </svg>
-                      {issue.tag}
-                    </span>
+                    <div className={styles.issueMetaItem}>
+                      <span className={styles.issueMetaLabel}>期限</span>
+                      <span className={styles.issueMetaValue}>{issue.limit}</span>
+                    </div>
+                    <div className={styles.issueMetaItem}>
+                      <span className={styles.issueMetaLabel}>経過日数</span>
+                      <span className={styles.issueMetaValue}>{calculateDaysPassed(issue.create_date)}日</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -785,14 +821,6 @@ export default function Home() {
           )}
         </div>
       </div>
-
-      <button 
-        className={styles.topButton}
-        onClick={scrollToTop}
-        aria-label="ページトップへ戻る"
-      >
-        TOPへ
-      </button>
     </div>
   );
 }
