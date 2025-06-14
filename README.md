@@ -33,4 +33,30 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.]
+
+ディレクトリ構成
+
+app/
+├── components/            # コンポーネント
+│   ├── issues/           # 課題関連コンポーネント
+│   │   ├── IssueCard/    # 課題カード
+│   │   ├── IssueDetail/  # 課題詳細
+│   │   ├── IssueForm/    # 課題フォーム
+│   │   └── IssueList/    # 課題一覧
+│   ├── layout/           # レイアウトコンポーネント
+│   │   ├── Header/       # ヘッダー
+│   │   ├── Sidebar/      # サイドバー
+│   │   └── styles.module.css  # レイアウトスタイル
+│   └── ui/               # 再利用可能なUIコンポーネント
+│       └── Modal/        # モーダル
+├── issues/               # 課題関連ページ
+│   └── [id]/            # 動的ルーティング
+│       └── page.js      # 課題詳細ページ
+├── lib/                 # ユーティリティ
+│   ├── constants.js     # 定数
+│   └── data.js         # データ関連
+├── favicon.ico         # ファビコン
+├── globals.css         # グローバルスタイル
+├── layout.js           # ルートレイアウト
+└── page.js             # メインページ
