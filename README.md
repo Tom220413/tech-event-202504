@@ -35,28 +35,30 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.]
 
-ディレクトリ構成
+## ディレクトリ構成
 
+```
 app/
-├── components/            # コンポーネント
-│   ├── issues/           # 課題関連コンポーネント
-│   │   ├── IssueCard/    # 課題カード
-│   │   ├── IssueDetail/  # 課題詳細
-│   │   ├── IssueForm/    # 課題フォーム
-│   │   └── IssueList/    # 課題一覧
-│   ├── layout/           # レイアウトコンポーネント
-│   │   ├── Header/       # ヘッダー
-│   │   ├── Sidebar/      # サイドバー
+├── components/              # コンポーネント
+│   ├── issues/              # 課題関連コンポーネント
+│   │   ├── IssueCard/       # 課題カード
+│   │   ├── IssueDetail/     # 課題詳細
+│   │   ├── IssueForm/       # 課題フォーム
+│   │   └── IssueList/       # 課題一覧
+│   ├── layout/              # レイアウトコンポーネント
+│   │   ├── Header/          # ヘッダー
+│   │   ├── Sidebar/         # サイドバー
 │   │   └── styles.module.css  # レイアウトスタイル
-│   └── ui/               # 再利用可能なUIコンポーネント
-│       └── Modal/        # モーダル
-├── issues/               # 課題関連ページ
-│   └── [id]/            # 動的ルーティング
-│       └── page.js      # 課題詳細ページ
-├── lib/                 # ユーティリティ
-│   ├── constants.js     # 定数
-│   └── data.js         # データ関連
-├── favicon.ico         # ファビコン
-├── globals.css         # グローバルスタイル
-├── layout.js           # ルートレイアウト
-└── page.js             # メインページ
+│   └── ui/                  # 再利用可能なUIコンポーネント
+│       └── Modal/           # モーダル
+├── issues/                  # 課題関連ページ
+│   └── [id]/                # 動的ルーティング
+│       └── page.js          # 課題詳細ページ
+├── lib/                     # ユーティリティ
+│   ├── constants.js         # 定数
+│   └── data.js              # データ関連
+├── favicon.ico              # ファビコン
+├── globals.css              # グローバルスタイル
+├── layout.js                # ルートレイアウト
+└── page.js                  # メインページ
+```
