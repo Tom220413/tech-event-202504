@@ -4,23 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../lib/auth-context';
 import { supabase } from '../lib/supabase';
-import styles from './page.module.css';
-
-// タグの列挙型
-const TAGS = {
-  DEVELOPMENT: '開発',
-  DESIGN: 'デザイン',
-  DOCUMENTATION: 'ドキュメント',
-  INFRASTRUCTURE: 'インフラ',
-  OTHER: 'その他'
-};
-
-// 優先度の列挙型
-const PRIORITY = {
-  HIGH: '高',
-  MEDIUM: '中',
-  LOW: '低'
-};
+import styles from './components/layout/styles.module.css';
+import Header from './components/layout/Header';
+import Sidebar from './components/layout/Sidebar';
+import IssueList from './components/issues/IssueList';
+import IssueDetail from './components/issues/IssueDetail';
+import IssueForm from './components/issues/IssueForm';
+import { TAGS, PRIORITY } from './lib/constants';
 
 export default function Home() {
   const router = useRouter();
@@ -70,7 +60,6 @@ export default function Home() {
         throw new Error('課題の取得に失敗しました');
       }
       const data = await response.json();
-      console.log(data, 'データ')
       
       // Supabaseからのデータ形式に対応
       const formattedIssues = data.map(issue => ({
@@ -118,15 +107,6 @@ export default function Home() {
   if (!isAuthenticated) {
     return null; // リダイレクト中
   }
-
-  // 利用可能なタグの一覧を取得
-  const availableTags = ['all', ...new Set(issues.map(issue => issue.tag))];
-
-  // タグごとの課題数を計算
-  const tagCounts = issues.reduce((acc, issue) => {
-    acc[issue.tag] = (acc[issue.tag] || 0) + 1;
-    return acc;
-  }, {});
 
   const validateForm = () => {
     const errors = {};
@@ -191,7 +171,7 @@ export default function Home() {
         
       } catch (apiError) {
         console.warn('API request failed:', apiError);
-        throw apiError; // エラーを再スロー
+        throw apiError;
       }
 
       setIsCreateMode(false);
@@ -218,7 +198,6 @@ export default function Home() {
       ...prev,
       [name]: value
     }));
-    // リアルタイムバリデーション
     if (formErrors[name]) {
       setFormErrors(prev => ({
         ...prev,
@@ -253,7 +232,6 @@ export default function Home() {
         throw new Error(result.message || '状態の更新に失敗しました');
       }
 
-      // APIからのレスポンスデータを適切な形式に変換
       const updatedIssue = {
         id: result.data.id,
         create_date: result.data.registration_date,
@@ -266,7 +244,6 @@ export default function Home() {
         flg: result.data.isResolve
       };
 
-      // ローカルの状態を更新
       const updatedIssues = issues.map(issue => 
         issue.id === selectedIssue.id ? updatedIssue : issue
       );
@@ -284,7 +261,6 @@ export default function Home() {
     setSubmitError(null);
 
     try {
-      // データベースに更新を送信
       const updateData = {
         title: editedIssue.title,
         content: editedIssue.content,
@@ -294,9 +270,6 @@ export default function Home() {
         inputter_name: editedIssue.username
       };
 
-      console.log('Updating issue with data:', updateData);
-      console.log('Issue ID:', editedIssue.id);
-
       const headers = await getAuthHeaders();
       const response = await fetch(`/api/update?id=${editedIssue.id}`, {
         method: 'PUT',
@@ -304,22 +277,17 @@ export default function Home() {
         body: JSON.stringify(updateData),
       });
 
-      console.log('Update response status:', response.status);
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Update error response:', errorData);
         throw new Error(errorData.error || '課題の更新に失敗しました');
       }
 
       const result = await response.json();
-      console.log('Update result:', result);
       
       if (!result.success) {
         throw new Error(result.error || '課題の更新に失敗しました');
       }
 
-      // ローカルの状態を更新
       const updatedIssues = issues.map(issue =>
         issue.id === editedIssue.id ? editedIssue : issue
       );
@@ -327,7 +295,6 @@ export default function Home() {
       setSelectedIssue(editedIssue);
       setIsEditMode(false);
 
-      // 課題リストを再取得して最新の状態を反映
       await fetchIssues();
 
     } catch (error) {
@@ -347,12 +314,10 @@ export default function Home() {
   };
 
   const filteredIssues = issues.filter(issue => {
-    // 解決状態でのフィルタリング
     const statusMatch = filter === 'all' || 
       (filter === 'resolved' && issue.flg) || 
       (filter === 'unresolved' && !issue.flg);
     
-    // タグでのフィルタリング
     const tagMatch = selectedTag === 'all' || issue.tag === selectedTag;
 
     return statusMatch && tagMatch;
@@ -368,524 +333,73 @@ export default function Home() {
     return 0;
   });
 
-  const calculateDaysPassed = (dateString) => {
-    const created = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - created);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  const getPriorityClass = (priority) => {
-    switch (priority) {
-      case '高':
-        return styles.priorityHigh;
-      case '中':
-        return styles.priorityMedium;
-      case '低':
-        return styles.priorityLow;
-      default:
-        return '';
-    }
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  };
-
   if (isDetailMode && selectedIssue) {
-    if (isLoading) {
-      return (
-        <div className={styles.container}>
-          <div className={styles.createHeader}>
-            <h1 className={styles.title}>課題の詳細</h1>
-          </div>
-          <div className={styles.skeletonDetailCard}>
-            <div className={styles.skeletonDetailHeader}>
-              <div className={`${styles.skeleton} ${styles.skeletonStatus}`} />
-              <div className={`${styles.skeleton} ${styles.skeletonPriority}`} />
-            </div>
-            <div className={`${styles.skeleton} ${styles.skeletonDetailTitle}`} />
-            <div className={`${styles.skeleton} ${styles.skeletonDetailContent}`} />
-            <div className={styles.skeletonDetailMeta}>
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className={`${styles.skeleton} ${styles.skeletonDetailMetaItem}`} />
-              ))}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
     if (isEditMode) {
       return (
-        <div className={styles.container}>
-          <div className={styles.createHeader}>
-            <h1 className={styles.title}>課題の編集</h1>
-            <button 
-              className={styles.backButton}
-              onClick={() => setIsEditMode(false)}
-            >
-              キャンセル
-            </button>
-          </div>
-
-          <form onSubmit={handleEditSubmit} className={styles.createForm}>
-            {submitError && (
-              <div className={styles.errorMessage}>
-                {submitError}
-              </div>
-            )}
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="priority">優先度</label>
-              <select
-                id="priority"
-                name="urgency"
-                value={editedIssue.urgency}
-                onChange={handleEditInputChange}
-                className={styles.formSelect}
-                disabled={isSubmitting}
-              >
-                {Object.entries(PRIORITY).map(([key, value]) => (
-                  <option key={key} value={value}>{value}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="title">タイトル</label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={editedIssue.title}
-                onChange={handleEditInputChange}
-                className={styles.formInput}
-                disabled={isSubmitting}
-                required
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="content">内容</label>
-              <textarea
-                id="content"
-                name="content"
-                value={editedIssue.content}
-                onChange={handleEditInputChange}
-                className={styles.formTextarea}
-                rows="5"
-                disabled={isSubmitting}
-                required
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="tag">タグ</label>
-              <select
-                id="tag"
-                name="tag"
-                value={editedIssue.tag}
-                onChange={handleEditInputChange}
-                className={styles.formSelect}
-                disabled={isSubmitting}
-              >
-                {Object.entries(TAGS).map(([key, value]) => (
-                  <option key={key} value={value}>{value}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="limit">期限</label>
-              <input
-                type="date"
-                id="limit"
-                name="limit"
-                value={editedIssue.limit}
-                onChange={handleEditInputChange}
-                className={styles.formInput}
-                disabled={isSubmitting}
-                required
-              />
-            </div>
-
-            <div className={styles.formActions}>
-              <button
-                type="submit"
-                className={styles.submitButton}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? '更新中...' : '更新する'}
-              </button>
-            </div>
-          </form>
-        </div>
+        <IssueForm
+          issue={editedIssue}
+          onSubmit={handleEditSubmit}
+          onChange={handleEditInputChange}
+          onCancel={() => setIsEditMode(false)}
+          isSubmitting={isSubmitting}
+          formErrors={formErrors}
+          submitError={submitError}
+          isEdit={true}
+        />
       );
     }
 
     return (
-      <div className={styles.container}>
-        <div className={styles.createHeader}>
-          <h1 className={styles.title}>課題の詳細</h1>
-          <div className={styles.detailActions}>
-            <button 
-              className={styles.statusToggleButton}
-              onClick={handleStatusToggle}
-            >
-              {selectedIssue.flg ? '未解決に戻す' : '解決済みにする'}
-            </button>
-            <button 
-              className={styles.editButton}
-              onClick={handleEditClick}
-            >
-              編集
-            </button>
-            <button 
-              className={styles.backButton}
-              onClick={() => setIsDetailMode(false)}
-            >
-              一覧に戻る
-            </button>
-          </div>
-        </div>
-
-        <div className={styles.detailCard}>
-          <div className={styles.detailHeader}>
-            <div className={styles.detailStatus}>
-              <span className={`${styles.priority} ${getPriorityClass(selectedIssue.urgency)}`}>
-                {selectedIssue.urgency}
-              </span>
-              <span className={`${styles.status} ${selectedIssue.flg ? styles.statusResolved : styles.statusUnresolved}`}>
-                {selectedIssue.flg ? '解決済み' : '未解決'}
-              </span>
-            </div>
-            <div className={styles.detailTag}>
-              <span className={styles.tag}>
-                <svg className={styles.tagIcon} viewBox="0 0 24 24" width="16" height="16">
-                  <path fill="currentColor" d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>
-                </svg>
-                {selectedIssue.tag}
-              </span>
-            </div>
-          </div>
-
-          <h2 className={styles.detailTitle}>{selectedIssue.title}</h2>
-          
-          <div className={styles.detailContent}>
-            <h3 className={styles.detailContentTitle}>内容</h3>
-            <p className={styles.detailContentText}>{selectedIssue.content}</p>
-          </div>
-
-          <div className={styles.detailMeta}>
-            <div className={styles.detailMetaItem}>
-              <span className={styles.detailMetaLabel}>担当者</span>
-              <span className={styles.detailMetaValue}>{selectedIssue.username}</span>
-            </div>
-            <div className={styles.detailMetaItem}>
-              <span className={styles.detailMetaLabel}>登録日</span>
-              <span className={styles.detailMetaValue}>{selectedIssue.create_date}</span>
-            </div>
-            <div className={styles.detailMetaItem}>
-              <span className={styles.detailMetaLabel}>期限</span>
-              <span className={styles.detailMetaValue}>{selectedIssue.limit}</span>
-            </div>
-            <div className={styles.detailMetaItem}>
-              <span className={styles.detailMetaLabel}>経過日数</span>
-              <span className={styles.detailMetaValue}>{calculateDaysPassed(selectedIssue.create_date)}日</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <IssueDetail
+        issue={selectedIssue}
+        onStatusToggle={handleStatusToggle}
+        onEditClick={handleEditClick}
+        onBackClick={() => setIsDetailMode(false)}
+      />
     );
   }
 
   if (isCreateMode) {
     return (
-      <div className={styles.container}>
-        <div className={styles.createHeader}>
-          <h1 className={styles.title}>新規課題の作成</h1>
-          <button 
-            className={styles.backButton}
-            onClick={() => setIsCreateMode(false)}
-          >
-            一覧に戻る
-          </button>
-        </div>
-
-        <form onSubmit={handleCreateIssue} className={styles.createForm}>
-          {submitError && (
-            <div className={styles.errorMessage}>
-              {submitError}
-            </div>
-          )}
-          
-          <div className={styles.formGroup}>
-            <label htmlFor="priority">優先度</label>
-            <select
-              id="priority"
-              name="priority"
-              value={newIssue.priority}
-              onChange={handleInputChange}
-              className={styles.formSelect}
-            >
-              {Object.entries(PRIORITY).map(([key, value]) => (
-                <option key={key} value={value}>{value}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="title">タイトル</label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={newIssue.title}
-              onChange={handleInputChange}
-              className={`${styles.formInput} ${formErrors.title ? styles.error : ''}`}
-              placeholder="タイトルを入力してください"
-            />
-            {formErrors.title && (
-              <span className={styles.errorMessage}>{formErrors.title}</span>
-            )}
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="content">内容</label>
-            <textarea
-              id="content"
-              name="content"
-              value={newIssue.content}
-              onChange={handleInputChange}
-              className={`${styles.formTextarea} ${formErrors.content ? styles.error : ''}`}
-              placeholder="内容を入力してください"
-              rows="5"
-            />
-            {formErrors.content && (
-              <span className={styles.errorMessage}>{formErrors.content}</span>
-            )}
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="tag">タグ</label>
-            <select
-              id="tag"
-              name="tag"
-              value={newIssue.tag}
-              onChange={handleInputChange}
-              className={styles.formSelect}
-            >
-              {Object.entries(TAGS).map(([key, value]) => (
-                <option key={key} value={value}>{value}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="limit">期限</label>
-            <input
-              type="date"
-              id="limit"
-              name="limit"
-              value={newIssue.limit}
-              onChange={handleInputChange}
-              className={`${styles.formInput} ${formErrors.limit ? styles.error : ''}`}
-            />
-            {formErrors.limit && (
-              <span className={styles.errorMessage}>{formErrors.limit}</span>
-            )}
-          </div>
-
-          <div className={styles.formActions}>
-            <button
-              type="submit"
-              className={styles.submitButton}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? '作成中...' : '作成する'}
-            </button>
-          </div>
-        </form>
-      </div>
+      <IssueForm
+        issue={newIssue}
+        onSubmit={handleCreateIssue}
+        onChange={handleInputChange}
+        onCancel={() => setIsCreateMode(false)}
+        isSubmitting={isSubmitting}
+        formErrors={formErrors}
+        submitError={submitError}
+      />
     );
   }
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>開発課題管理</h1>
-        <div className={styles.headerActions}>
-          <div className={styles.userInfo}>
-            <span className={styles.userName}>
-              {user?.user_metadata?.display_name || user?.email || 'ユーザー'}
-            </span>
-            <button 
-              className={styles.logoutButton}
-              onClick={signOut}
-            >
-              ログアウト
-            </button>
-          </div>
-          <button 
-            className={styles.createButton}
-            onClick={() => setIsCreateMode(true)}
-          >
-            新規作成
-          </button>
-        </div>
-      </div>
+      <Header
+        user={user}
+        onSignOut={signOut}
+        onCreateClick={() => setIsCreateMode(true)}
+      />
       
       <div className={styles.mainContent}>
-        <div className={styles.sidebar}>
-          <div className={styles.tagList}>
-            <h2 className={styles.tagListTitle}>タグ一覧</h2>
-            <div className={styles.tagListContent}>
-              <div
-                className={`${styles.tagItem} ${selectedTag === 'all' ? styles.active : ''}`}
-                onClick={() => setSelectedTag('all')}
-              >
-                <span>すべて</span>
-                <span className={styles.tagCount}>{issues.length}</span>
-              </div>
-              {Object.values(TAGS).map((tag) => (
-                <div
-                  key={tag}
-                  className={`${styles.tagItem} ${selectedTag === tag ? styles.active : ''}`}
-                  onClick={() => setSelectedTag(tag)}
-                >
-                  <span>{tag}</span>
-                  <span className={styles.tagCount}>
-                    {issues.filter(issue => issue.tag === tag).length}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <Sidebar
+          issues={issues}
+          selectedTag={selectedTag}
+          onTagSelect={setSelectedTag}
+        />
 
-        <div className={styles.content}>
-          <div className={styles.tabs}>
-            <button
-              className={`${styles.tab} ${filter === 'all' ? styles.active : ''}`}
-              onClick={() => setFilter('all')}
-            >
-              すべて
-            </button>
-            <button
-              className={`${styles.tab} ${filter === 'unresolved' ? styles.active : ''}`}
-              onClick={() => setFilter('unresolved')}
-            >
-              未解決
-            </button>
-            <button
-              className={`${styles.tab} ${filter === 'resolved' ? styles.active : ''}`}
-              onClick={() => setFilter('resolved')}
-            >
-              解決済み
-            </button>
-          </div>
-
-          <div className={styles.sortFilters}>
-            <span className={styles.sortLabel}>並び替え:</span>
-            <button
-              className={`${styles.sortButton} ${sortBy === 'newest' ? styles.active : ''}`}
-              onClick={() => setSortBy('newest')}
-            >
-              新着順
-            </button>
-            <button
-              className={`${styles.sortButton} ${sortBy === 'oldest' ? styles.active : ''}`}
-              onClick={() => setSortBy('oldest')}
-            >
-              古い順
-            </button>
-            <button
-              className={`${styles.sortButton} ${sortBy === 'priority' ? styles.active : ''}`}
-              onClick={() => setSortBy('priority')}
-            >
-              優先度順
-            </button>
-          </div>
-
-          {isLoading ? (
-            <div className={styles.issuesList}>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className={styles.skeletonCard}>
-                  <div className={styles.skeletonHeader}>
-                    <div className={`${styles.skeleton} ${styles.skeletonStatus}`} />
-                    <div className={`${styles.skeleton} ${styles.skeletonPriority}`} />
-                  </div>
-                  <div className={`${styles.skeleton} ${styles.skeletonTitle}`} />
-                  <div className={`${styles.skeleton} ${styles.skeletonContent}`} />
-                  <div className={styles.skeletonMeta}>
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className={`${styles.skeleton} ${styles.skeletonMetaItem}`} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className={styles.issuesList}>
-              {filteredIssues.map((issue) => (
-                <div 
-                  key={issue.id} 
-                  className={styles.issueCard}
-                  onClick={() => {
-                    setSelectedIssue(issue);
-                    setIsDetailMode(true);
-                  }}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className={styles.issueHeader}>
-                    <div className={styles.issueStatus}>
-                      <span className={`${styles.priority} ${getPriorityClass(issue.urgency)}`}>
-                        {issue.urgency}
-                      </span>
-                      <span className={`${styles.status} ${issue.flg ? styles.statusResolved : styles.statusUnresolved}`}>
-                        {issue.flg ? '解決済み' : '未解決'}
-                      </span>
-                    </div>
-                    <div className={styles.issueTag}>
-                      <span className={styles.tag}>
-                        <svg className={styles.tagIcon} viewBox="0 0 24 24" width="16" height="16">
-                          <path fill="currentColor" d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>
-                        </svg>
-                        {issue.tag}
-                      </span>
-                    </div>
-                  </div>
-
-                  <h2 className={styles.issueTitle}>{issue.title}</h2>
-                  <p className={styles.issueContent}>{issue.content}</p>
-
-                  <div className={styles.issueMeta}>
-                    <div className={styles.issueMetaItem}>
-                      <span className={styles.issueMetaLabel}>担当者</span>
-                      <span className={styles.issueMetaValue}>{issue.username}</span>
-                    </div>
-                    <div className={styles.issueMetaItem}>
-                      <span className={styles.issueMetaLabel}>登録日</span>
-                      <span className={styles.issueMetaValue}>{issue.create_date}</span>
-                    </div>
-                    <div className={styles.issueMetaItem}>
-                      <span className={styles.issueMetaLabel}>期限</span>
-                      <span className={styles.issueMetaValue}>{issue.limit}</span>
-                    </div>
-                    <div className={styles.issueMetaItem}>
-                      <span className={styles.issueMetaLabel}>経過日数</span>
-                      <span className={styles.issueMetaValue}>{calculateDaysPassed(issue.create_date)}日</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <IssueList
+          issues={filteredIssues}
+          filter={filter}
+          sortBy={sortBy}
+          onFilterChange={setFilter}
+          onSortChange={setSortBy}
+          onIssueClick={(issue) => {
+            setSelectedIssue(issue);
+            setIsDetailMode(true);
+          }}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );
