@@ -38,6 +38,95 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    - Enable phone confirmations: 必要に応じて
    - Site URL: `http://localhost:3000` (開発時)
 
+## 初回セットアップ手順
+
+### 新しい開発者がプロジェクトをセットアップする場合
+
+1. **リポジトリのクローン**
+   ```bash
+   git clone <repository-url>
+   cd tech-event-202504
+   ```
+
+2. **依存関係のインストール**
+   ```bash
+   npm install
+   ```
+
+3. **環境変数ファイルの作成**
+   ```bash
+   cp .env.example .env.local  # .env.exampleがある場合
+   # または手動で .env.local を作成
+   ```
+
+4. **環境変数の設定**
+   - `.env.local` ファイルを編集
+   - Supabaseの設定値を入力
+
+5. **開発サーバーの起動**
+   ```bash
+   npm run dev
+   ```
+
+## トラブルシューティング
+
+### よくあるエラーと解決方法
+
+#### 1. `AuthSessionMissingError: Auth session missing!`
+**原因**: 環境変数が設定されていない、または無効な値が設定されている
+
+**解決方法**:
+1. `.env.local` ファイルが存在することを確認
+2. 環境変数の値が正しいことを確認
+3. 開発サーバーを再起動
+   ```bash
+   npm run dev
+   ```
+4. ブラウザのキャッシュをクリア
+
+#### 2. `Missing Supabase environment variables`
+**原因**: 必要な環境変数が設定されていない
+
+**解決方法**:
+1. `.env.local` ファイルに以下が設定されているか確認：
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+2. 値にスペースや改行が含まれていないか確認
+3. 引用符は不要（値を直接記述）
+
+#### 3. 認証が機能しない
+**原因**: Supabaseプロジェクトの設定問題
+
+**解決方法**:
+1. Supabaseダッシュボードで認証が有効になっているか確認
+2. Site URLが正しく設定されているか確認
+3. データベーススキーマが正しく適用されているか確認
+
+#### 4. データが表示されない
+**原因**: Row Level Security (RLS) の設定問題
+
+**解決方法**:
+1. `docs/database-schema.sql` を再実行
+2. RLSポリシーが正しく設定されているか確認
+3. ユーザーがログインしているか確認
+
+### デバッグ方法
+
+1. **ブラウザの開発者ツールを確認**
+   - コンソールタブでエラーメッセージを確認
+   - ネットワークタブでAPI呼び出しを確認
+
+2. **環境変数の確認**
+   ```javascript
+   // ブラウザのコンソールで実行
+   console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+   console.log('Supabase Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+   ```
+
+3. **Supabaseダッシュボードでログ確認**
+   - Authentication > Users でユーザー登録状況を確認
+   - Database > Tables でデータの状況を確認
+
 ## セキュリティ考慮事項
 
 ### Row Level Security (RLS)
