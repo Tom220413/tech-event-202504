@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import styles from '../../page.module.css';
+import styles from '../../components/layout/styles.module.css';
 
 const TAGS = {
   DEVELOPMENT: '開発',

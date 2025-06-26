@@ -1,0 +1,243 @@
+.content {
+  min-width: 0;
+  width: 100%;
+}
+
+.filterSection {
+  margin-bottom: 2rem;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filterButton {
+  padding: 0.5rem 1rem;
+  background: #f5f5f5;
+  color: #666;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filterButton:hover {
+  background: #e0e0e0;
+}
+
+.filterButton.active {
+  background: #0070f3;
+  color: white;
+}
+
+.tagFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tagFilterLabel {
+  font-size: 0.875rem;
+  color: #666;
+  margin-right: 0.5rem;
+}
+
+.tagFilterButton {
+  padding: 0.35rem 0.75rem;
+  background: #f5f5f5;
+  color: #666;
+  border: none;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tagFilterButton:hover {
+  background: #e0e0e0;
+}
+
+.tagFilterButton.active {
+  background: #0070f3;
+  color: white;
+}
+
+.issuesList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sortFilters {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.sortLabel {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.sortButton {
+  padding: 0.35rem 0.75rem;
+  background: #f5f5f5;
+  color: #666;
+  border: none;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sortButton:hover {
+  background: #e0e0e0;
+}
+
+.sortButton.active {
+  background: #0070f3;
+  color: white;
+}
+
+.tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.tab {
+  padding: 0.5rem 1rem;
+  color: #666;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  background: none;
+  border: none;
+}
+
+.tab:hover {
+  color: #333;
+}
+
+.tab.active {
+  color: #0070f3;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #0070f3;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeletonCard {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.skeletonHeader {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.skeletonStatus {
+  width: 80px;
+  height: 24px;
+}
+
+.skeletonPriority {
+  width: 60px;
+  height: 24px;
+}
+
+.skeletonTitle {
+  width: 70%;
+  height: 24px;
+  margin-bottom: 1rem;
+}
+
+.skeletonContent {
+  width: 100%;
+  height: 60px;
+  margin-bottom: 1rem;
+}
+
+.skeletonMeta {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.skeletonMetaItem {
+  width: 100px;
+  height: 20px;
+}
+
+.skeletonTag {
+  width: 120px;
+  height: 24px;
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+  }
+
+  .filterButton {
+    width: 100%;
+  }
+
+  .sortFilters {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tabs {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .tab {
+    width: 100%;
+    text-align: center;
+  }
+
+  .tab.active::after {
+    display: none;
+  }
+} 
